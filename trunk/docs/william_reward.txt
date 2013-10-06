@@ -1,0 +1,16 @@
+﻿id		順序
+註解		給自己看的
+level		等級到達多少
+give_royal	給王族
+give_knight	給騎士
+give_mage	給法師
+give_elf		給妖精
+give_darkelf	給黑妖
+give_dragonKnight	給龍騎士
+give_illusionist	給幻術士
+getItem		給予何種道具(可增加多個~以 , 分隔)
+count		給予道具的數量(可增加多個~以 , 分隔)
+enchantlvl	給予道具的等級(可增加多個~以 , 分隔)
+quest_id		只要達成就給予任務編號(自行設定)防止玩家掉等洗道具
+quest_step	結束任務給予固定值255
+message		達成目標後顯示的訊息
