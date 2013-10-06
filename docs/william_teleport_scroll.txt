@@ -1,0 +1,15 @@
+item_id		傳送卷軸(符)編號
+tpLocX		傳送的座標X
+tpLocY		傳送的座標Y
+tpMapId		傳送的地圖編號
+check_minLocX	使用範圍x
+check_minLocY	使用範圍y
+check_maxLocX	使用範圍x
+check_maxLocY	使用範圍y
+check_MapId	使用範圍的地圖編號
+removeItem	是否刪除道具
+
+etcitem資料裡面的自訂傳送卷軸(符)道具
+item_type 請設定為 TeleportScroll
+use_type 請設定為 normal
+才有效果

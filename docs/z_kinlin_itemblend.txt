@@ -1,0 +1,21 @@
+﻿item_id			物品編號(點兩下用的道具 item_type請設定 ItemBlend，use_type請設定 normal)
+name			道具名稱	
+checkClass		判定職業 (0 = 不判斷、1 = 王族、2 = 騎士、3 = 法師、4 = 妖精、5 = 黑妖、6 = 龍騎士、7 = 幻術士)	
+checkLevel		判定等級
+rnd			合成機率	
+checkItem		觸發融合的道具
+hpConsume		判斷扣損血量
+mpConsume		判斷扣損魔力
+material			合成需要媒介
+material_count		合成需要媒介數量
+material_2		合成需要媒介2
+material_2_count		合成需要媒介數量2
+material_3		合成需要媒介3
+material_3_count		合成需要媒介數量3
+new_item		合成成功給予的道具
+new_item_counts		合成成功給予的道具數量(如果是不能疊加的物品，請設定1，不然會出錯)
+new_Enchantlvl_SW	合成成功給予的道具(武器或防具)強化值是否隨機的開關   隨機:1 固定:0	
+new_item_Enchantlvl	合成成功給予的道具的強化值		
+removeItem		判斷是否刪除物品       是:1 否:0
+message			設定顯示對話輸入
+item_Html		判斷融合條件不足時，是否開啟融合條件清單   開啟:1 不開啟:0
