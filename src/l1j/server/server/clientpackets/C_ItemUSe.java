@@ -47,6 +47,7 @@ import l1j.server.server.datatables.PetTable;
 import l1j.server.server.datatables.PolyTable;
 import l1j.server.server.datatables.ResolventTable;
 import l1j.server.server.datatables.SkillsTable;
+import l1j.server.server.datatables.WeaponSoulTable;
 import l1j.server.server.model.Getback;
 import l1j.server.server.model.L1CastleLocation;
 import l1j.server.server.model.L1Character;
@@ -81,6 +82,7 @@ import l1j.server.server.model.item.action.FurnitureItem;
 import l1j.server.server.model.item.action.MagicDoll;
 import l1j.server.server.model.item.action.Potion;
 import l1j.server.server.model.item.action.FilterItem; // 掉落物品過濾系統 by missu0524
+//import l1j.server.server.model.item.action.WeaponSoulState; // 武魂介面
 import l1j.server.server.model.poison.L1DamagePoison;
 import l1j.server.server.model.skill.L1SkillUse;
 import l1j.server.server.serverpackets.S_AddSkill;
@@ -2973,7 +2975,7 @@ public class C_ItemUSe extends ClientBasePacket {
 						return;
 					}
 					pc.sendPackets(new S_ServerMessage(166, L1WilliamSystemMessage.ShowMessage(112)));
-					pc.setFamePoint((short) (pc.getFamePoint() + 1));
+					pc.setFamePoint( (pc.getFamePoint() + 1));//fix short to int by testt
 					pc.getInventory().removeItem(l1iteminstance, 1);
 					pc.save();
 				} else if (itemId == 60012) { // 聲望[5]
@@ -2986,7 +2988,7 @@ public class C_ItemUSe extends ClientBasePacket {
 						return;
 					}
 					pc.sendPackets(new S_ServerMessage(166, L1WilliamSystemMessage.ShowMessage(113)));
-					pc.setFamePoint((short) (pc.getFamePoint() + 5));
+					pc.setFamePoint( (pc.getFamePoint() + 5));//fix short to int by testt
 					pc.getInventory().removeItem(l1iteminstance, 1);
 					pc.save();
 				} else if (itemId == 60013) { // 聲望[10]
@@ -2999,13 +3001,16 @@ public class C_ItemUSe extends ClientBasePacket {
 						return;
 					}
 					pc.sendPackets(new S_ServerMessage(166, L1WilliamSystemMessage.ShowMessage(114)));
-					pc.setFamePoint((short) (pc.getFamePoint() + 10));
+					pc.setFamePoint( (pc.getFamePoint() + 10));//fix short to int by testt
 					pc.getInventory().removeItem(l1iteminstance, 1);
 					pc.save();
 				} else if (itemId == 60014) { // 物品過濾器
 					FilterItem.useFilterItem(pc, l1iteminstance1, l1iteminstance);
 				} else if (itemId == 60015) { // 物品過濾清單
 					FilterItem.useFilterItemCleaner(pc, l1iteminstance);
+				} else if (itemId == 60017){ // 武魂契約書
+					WeaponSoulTable.getNewInstance().getStr1(pc, pc.getCurrentRune());
+					//pc.getCurrentRune();
 				} else if (itemId == 40075) { // 毀滅盔甲的卷軸
 					if (l1iteminstance1.getItem().getType2() == 2) {
 						int msg = 0;

@@ -14,6 +14,9 @@
  */
 package l1j.server.server;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,6 +24,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import sun.misc.BASE64Encoder;
 
 import l1j.server.L1DatabaseFactory;
 import l1j.server.server.utils.SQLUtil;
@@ -35,7 +40,7 @@ public class Account {
 	/** 來源IP位址 */
 	private String _ip;
 
-	/** 使用者帳號密碼 */
+	/** 加密過後的密碼 */
 	private String _password;
 
 	/** 上一次登入的日期 */
@@ -75,6 +80,25 @@ public class Account {
 	}
 
 	/**
+	 * 將明文密碼加密
+	 * 
+	 * @param rawPassword
+	 *            明文密碼
+	 * @return String
+	 * @throws NoSuchAlgorithmException
+	 *             密碼使用不存在的演算法加密
+	 * @throws UnsupportedEncodingException
+	 *             文字編碼不支援
+	 */
+	private static String encodePassword(final String rawPassword)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		byte[] buf = rawPassword.getBytes("UTF-8");
+		buf = MessageDigest.getInstance("SHA").digest(buf);
+
+		return new BASE64Encoder().encode(buf);
+	}
+
+	/**
 	 * 建立新的帳號
 	 * 
 	 * @param name
@@ -95,7 +119,7 @@ public class Account {
 
 			Account account = new Account();
 			account._name = name;
-			account._password = rawPassword;
+			account._password = encodePassword(rawPassword);
 			account._ip = ip;
 			account._host = host;
 			account._banned = false;
@@ -115,10 +139,14 @@ public class Account {
 			pstm.setInt(9, account._online ? 1 : 0);
 			pstm.setInt(10, account._onlineStatus ? 1 : 0);
 			pstm.execute();
-			_log.info("建立新的帳號為 " + name);
+			_log.info("created new account for " + name);
 
 			return account;
 		} catch (SQLException e) {
+			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
+		} catch (NoSuchAlgorithmException e) {
+			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
+		} catch (UnsupportedEncodingException e) {
 			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 		} finally {
 			SQLUtil.close(pstm);
@@ -162,7 +190,7 @@ public class Account {
 			account._WarePassword = rs.getInt("warepassword");
 			account._onlineStatus = rs.getInt("OnlineStatus") == 0 ? false : true;
 
-			_log.fine("帳號已存在");
+			_log.fine("account exists");
 		} catch (SQLException e) {
 			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 		} finally {
@@ -360,7 +388,7 @@ public class Account {
 			return false;
 		}
 		try {
-			_isValid = _password.equals(rawPassword);
+			_isValid = _password.equals(encodePassword(rawPassword));
 			if (_isValid) {
 				_password = null; // 認證成功後就將記憶體中的密碼清除
 			}

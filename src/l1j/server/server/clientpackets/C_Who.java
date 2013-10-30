@@ -16,6 +16,7 @@ package l1j.server.server.clientpackets;
 
 import l1j.server.Config;
 import l1j.server.server.ClientThread;
+import l1j.server.server.datatables.ShopTable;
 import l1j.server.server.model.L1World;
 import l1j.server.server.model.Instance.L1PcInstance;
 import l1j.server.server.serverpackets.S_WhoAmount;

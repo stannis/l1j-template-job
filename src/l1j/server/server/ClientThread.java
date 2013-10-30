@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.math.BigInteger;// 登入器綁定
 
 import l1j.server.Config;
 import l1j.server.server.Opcodes;
@@ -72,22 +71,15 @@ public class ClientThread implements Runnable, PacketOutput {
 	private String _hostname;
 
 	private Socket _csocket;
-	// 登入器綁定
-	private int _xorByte = (byte) 0xF0;
-	private long _authdata;
-	// 登入器綁定
 
 	private int _loginStatus = 0;
 
-/*	private static final byte[] FIRST_PACKET = { // 3.5C Taiwan Server 
+	private static final byte[] FIRST_PACKET = { // 3.5C Taiwan Server 
 		    (byte) 0xf4, (byte) 0x0a, (byte) 0x8d, (byte) 0x23, (byte) 0x6f, 
 		    (byte) 0x7f, (byte) 0x04, (byte) 0x00, (byte) 0x05, (byte) 0x08, 
 		    (byte) 0x00 
-    };*/
-private static final byte[] FIRST_PACKET = { // 3.52 TW
-                (byte) 0xf9, (byte) 0xb0, (byte) 0x2a, (byte) 0x73, (byte) 0x01,
-                (byte) 0x80, (byte) 0xff, (byte) 0xce, (byte) 0xc6, (byte) 0xc1,
-                (byte) 0xfa };
+    };
+
 	/**
 	 * for Test
 	 */
@@ -104,13 +96,7 @@ private static final byte[] FIRST_PACKET = { // 3.52 TW
 		}
 		_in = socket.getInputStream();
 		_out = new BufferedOutputStream(socket.getOutputStream());
-		// 登入器綁定
-		if(Config.LOGINS_TO_AUTOENTICATION) {
- 			int randomNumber = (int)(Math.random() * 900000000) + 255;
- 			_xorByte = randomNumber % 255 + 1;
-			_authdata = new BigInteger(Integer.toString(randomNumber)).modPow(new BigInteger(Config.RSA_KEY_E), new BigInteger(Config.RSA_KEY_N)).longValue();
-		}
-		// 登入器綁定
+
 		// PacketHandler 初始化
 		_handler = new PacketHandler(this);
 	}
@@ -138,12 +124,6 @@ private static final byte[] FIRST_PACKET = { // 3.52 TW
 		try {
 			int hiByte = _in.read();
 			int loByte = _in.read();
-			// 登入器綁定
-			if (Config.LOGINS_TO_AUTOENTICATION) {
-				hiByte ^= _xorByte;
-				loByte ^= _xorByte;
-			}
-			// 登入器綁定
 			if ((loByte < 0) || (hiByte < 0)) { 
 				throw new RuntimeException();
 			}
@@ -166,13 +146,6 @@ private static final byte[] FIRST_PACKET = { // 3.52 TW
 				throw new RuntimeException();
 			}
 
-			// 登入器綁定
-			if (Config.LOGINS_TO_AUTOENTICATION) {
-				for (int i = 0; i < dataLength; i++) {
-					data[i] = (byte) (data[i] ^ _xorByte);
-				}
-			}
-			// 登入器綁定
 			return _cipher.decrypt(data);
 		} catch (Exception e) {
 			throw e;
@@ -237,15 +210,6 @@ private static final byte[] FIRST_PACKET = { // 3.52 TW
 			key = Integer.parseInt(keyHax, 16);
 
 			Bogus = (byte) (FIRST_PACKET.length + 7);
-			// 登入器綁定
-			if (Config.LOGINS_TO_AUTOENTICATION) {
-				_out.write((int) (_authdata & 0xff));
-				_out.write((int) (_authdata >> 8 & 0xff));
-				_out.write((int) (_authdata >> 16 & 0xff));
-				_out.write((int) (_authdata >> 24 & 0xff));
-				_out.flush();
-			}
-			// 登入器綁定
 			_out.write(Bogus & 0xFF);
 			_out.write(Bogus >> 8 & 0xFF);
 			_out.write(Opcodes.S_OPCODE_INITPACKET);// 3.5C Taiwan Server
@@ -278,9 +242,9 @@ private static final byte[] FIRST_PACKET = { // 3.52 TW
 
 
 		try {
-			//_log.info("(" + _hostname + ") 連結到伺服器。");
+			_log.info("(" + _hostname + ") 連結到伺服器。");
 			System.out.println("使用了 " + SystemUtil.getUsedMemoryMB() + "MB 的記憶體");
-			//System.out.println("等待客戶端連接...");
+			System.out.println("等待客戶端連接...");
 			
 			ClientThreadObserver observer = new ClientThreadObserver(
 					Config.AUTOMATIC_KICK * 60 * 1000); // 自動斷線的時間（單位:毫秒）
@@ -385,10 +349,10 @@ private static final byte[] FIRST_PACKET = { // 3.52 TW
 		_csocket = null;
 		_log.fine("Server thread[C] stopped");
 		if (_kick < 1) {
-			//_log.info("(" + getAccountName() + ":" + _hostname + ")連線終止。");
-			//System.out.println("使用了 " + SystemUtil.getUsedMemoryMB()
-					//+ "MB 的記憶體");
-			//System.out.println("等待客戶端連接...");
+			_log.info("(" + getAccountName() + ":" + _hostname + ")連線終止。");
+			System.out.println("使用了 " + SystemUtil.getUsedMemoryMB()
+					+ "MB 的記憶體");
+			System.out.println("等待客戶端連接...");
 			if (getAccount() != null) {
 				Account.online(getAccount(), false);
 			}
@@ -656,10 +620,6 @@ private static final byte[] FIRST_PACKET = { // 3.52 TW
 		// 設定帳號的角色為下線
 		Account account = Account.load(pc.getAccountName());
 		Account.OnlineStatus(account, false);
-		//add GUI by Eric
-		if(Config.GUI)
-			l1j.gui.Eric_J_Main.getInstance().delPlayerTable(pc.getName());
-		//end
 
 		try {
 			pc.save();
@@ -667,7 +627,5 @@ private static final byte[] FIRST_PACKET = { // 3.52 TW
 		} catch (Exception e) {
 			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 		}
-		System.out.println("玩家：《" + pc.getName() + "》 退出遊戲了。");
-		System.out.println("使用了 " + SystemUtil.getUsedMemoryMB() + "MB 的記憶體");
 	}
 }

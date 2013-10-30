@@ -210,7 +210,7 @@ public class L1Armor extends L1Item {
 		return this._regist_blind;
 	}
 
-	private int _grade = 0; // 飾品級別
+	private int _grade; // 飾品級別(fix)
 
 	public void setGrade(int i) {
 		_grade = i;

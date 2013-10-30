@@ -43,12 +43,12 @@ import static l1j.server.server.model.skill.L1SkillId.WIND_SHACKLE;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.HashSet; // 掉落物品過濾系統 by missu0524
 import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.HashSet; // 掉落物品過濾系統 by missu0524
 
 import l1j.server.Config;
 import l1j.server.server.ActionCodes;
@@ -113,18 +113,20 @@ import l1j.server.server.serverpackets.S_Invis;
 import l1j.server.server.serverpackets.S_Lawful;
 import l1j.server.server.serverpackets.S_Liquor;
 import l1j.server.server.serverpackets.S_MPUpdate;
+import l1j.server.server.serverpackets.S_Message_YN;
 import l1j.server.server.serverpackets.S_OtherCharPacks;
 import l1j.server.server.serverpackets.S_OwnCharStatus;
 import l1j.server.server.serverpackets.S_PacketBox;
 import l1j.server.server.serverpackets.S_Poison;
 import l1j.server.server.serverpackets.S_RemoveObject;
 import l1j.server.server.serverpackets.S_ServerMessage;
+import l1j.server.server.serverpackets.S_SkillHaste; // TODO 加速狀態魔法娃娃
+import l1j.server.server.serverpackets.S_SkillIconEinhasad; // 殷海薩的祝福
 import l1j.server.server.serverpackets.S_SkillIconGFX;
+import l1j.server.server.serverpackets.S_SkillSound;
 import l1j.server.server.serverpackets.S_SystemMessage;
 import l1j.server.server.serverpackets.S_bonusstats;
 import l1j.server.server.serverpackets.ServerBasePacket;
-import l1j.server.server.serverpackets.S_SkillIconEinhasad; // 殷海薩的祝福
-import l1j.server.server.serverpackets.S_SkillHaste; // TODO 加速狀態魔法娃娃
 import l1j.server.server.templates.L1BookMark;
 import l1j.server.server.templates.L1Item;
 import l1j.server.server.templates.L1MagicDoll;
@@ -133,6 +135,7 @@ import l1j.server.server.templates.L1PrivateShopSellList;
 import l1j.server.server.utils.CalcStat;
 import l1j.server.server.utils.Random;
 import l1j.server.server.utils.collections.Lists;
+import l1j.william.L1WilliamSystemMessage;
 
 // Referenced classes of package l1j.server.server.model:
 // L1Character, L1DropTable, L1Object, L1ItemInstance,
@@ -691,6 +694,16 @@ public class L1PcInstance extends L1Character {
 	public void setCurrentWeapon(int i) {
 		_currentWeapon = i;
 	}
+	
+	//*目前裝備的輔助裝備ID回傳*//
+	
+	public int getCurrentRune() {
+		return _currentRune;
+	}
+
+	public void setCurrentRune(int i) {
+		_currentRune = i;
+	}
 
 	public int getType() {
 		return _type;
@@ -789,16 +802,37 @@ public class L1PcInstance extends L1Character {
 	}
 	
 	// sosodemon add 聲望系統 BY.SosoDEmoN
-	public short _famePoint;
+	public int _famePoint;
 	/** 取得聲望值 **/
-	public short getFamePoint() { 
+	public int getFamePoint() { 
         return _famePoint; 
     } 
 	/** 設定聲望值 **/
-    public void setFamePoint(short i) { 
+	//fix short to int by testt
+    public void setFamePoint(int i) { 
     	_famePoint = i; 
     } 
+    
+    // sosodemon add 稱望系統 BY.SosoDEmoN Start 
+    private int _fameLevel = 0;
+    public int getFameLevel() { 
+    	return _fameLevel; 
+    } 
+    public void setFameLevel(int i) { 
+    	_fameLevel = i; 
+    } 
+   // sosodemon add 稱望系統 BY.SosoDEmoN End 
 
+    // sosodemon add 稱望系統 BY.SosoDEmoN Start 
+    private String _famename;
+    public String getFamename() { 
+    	return _famename; 
+    } 
+    public void setFamename(String i) { 
+    	_famename = i; 
+    } 
+   // sosodemon add 稱望系統 BY.SosoDEmoN End 
+    
 	// 角色生日
 	private Timestamp _birthday;
 
@@ -1380,7 +1414,7 @@ public class L1PcInstance extends L1Character {
 		}
 
 		@Override
-		public void run() {
+		public void run(){
 			L1Character lastAttacker = _lastAttacker;
 			_lastAttacker = null;
 			setCurrentHp(0);
@@ -1454,6 +1488,34 @@ public class L1PcInstance extends L1Character {
 				}
 			}
 
+			// 增加 被在追憶之島被殺屎不會調經驗且10秒後會自動復活  by testt
+			if ((!getMap().isEnabledDeathPenalty()) && (getMap().getId() == 701)) {
+				try {
+					sendPackets(new S_ServerMessage(166, "別慌張，你沒有掉經驗"));
+					sendPackets(new S_ServerMessage(166, "也別急著重新開始"));
+					sendPackets(new S_ServerMessage(166, "請等待10秒後復活"));
+					Thread.sleep(5000);
+					sendPackets(new S_ServerMessage(166, "請等待5秒後復活")); // 5秒前
+					Thread.sleep(1000);
+					sendPackets(new S_ServerMessage(166, "請等待4秒後復活")); // 4秒前
+					Thread.sleep(1000);
+					sendPackets(new S_ServerMessage(166, "請等待3秒後復活")); // 3秒前
+					Thread.sleep(1000);
+					sendPackets(new S_ServerMessage(166, "請等待2秒後復活")); // 2秒前
+					Thread.sleep(1000);
+					sendPackets(new S_ServerMessage(166, "請等待1秒後復活")); // 1秒前
+					sendPackets(new S_SystemMessage("天使幫你復活嚕。"));
+					broadcastPacket(new S_SkillSound(getId(), 3944));
+					sendPackets(new S_SkillSound(getId(), 3944));
+					// 祝福された 復活スクロールと同じ効果
+					setTempID(getId());
+					sendPackets(new S_Message_YN(322, "")); // また復活したいですか？（Y/N）
+					return;
+				}
+				catch (Exception e) {}
+			}
+			
+			// 在戰場被殺死不會調經驗
 			if (!getMap().isEnabledDeathPenalty()) {
 				return;
 			}
@@ -1541,11 +1603,8 @@ public class L1PcInstance extends L1Character {
 			boolean castle_ret = castleWarResult(); // 攻城戦
 			if (castle_ret == true) { // 攻城戦中で旗内なら赤ネームペナルティなし
 				return;
-			}
+			}			
 
-			if (!getMap().isEnabledDeathPenalty()) {
-				return;
-			}
 
 			// 增加新手保護階段, 將不會損失經驗值
 			if (!isNovice) {
@@ -1923,6 +1982,7 @@ public class L1PcInstance extends L1Character {
 	private boolean _gmInvis;
 	private short _accessLevel;
 	private int _currentWeapon;
+	private int _currentRune;//目前裝的輔助裝備
 	private final L1PcInventory _inventory;
 	private final L1DwarfInventory _dwarf;
 	private final L1DwarfForElfInventory _dwarfForElf;
@@ -4926,6 +4986,61 @@ public class L1PcInstance extends L1Character {
 			}
 		}
 	}
+	
+	// 稱號系統fix by testt
+	public void checkFamename() {
+		String FameName = "";
+		if (getFamePoint() >= 0 && getFamePoint() < Config.FAME_LV1_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(100); //Lv1 0~9
+			setFameLevel(1);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV1_POINT && getFamePoint() < Config.FAME_LV2_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(101); //Lv2 10~29
+			setFameLevel(2);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV2_POINT && getFamePoint() < Config.FAME_LV3_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(102); //Lv3 30~49
+			setFameLevel(3);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV3_POINT && getFamePoint() < Config.FAME_LV4_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(103); //Lv4 50~69
+			setFameLevel(4);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV4_POINT && getFamePoint() < Config.FAME_LV5_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(104); //Lv5 70~89
+			setFameLevel(5);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV5_POINT && getFamePoint() < Config.FAME_LV6_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(105); //Lv6 90~109
+			setFameLevel(6);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV6_POINT && getFamePoint() < Config.FAME_LV7_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(106); //Lv7 110~129
+			setFameLevel(7);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV7_POINT && getFamePoint() < Config.FAME_LV8_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(107); //Lv8 130~149
+			setFameLevel(8);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV8_POINT && getFamePoint() < Config.FAME_LV9_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(108); //Lv9 150~169
+			setFameLevel(9);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV9_POINT && getFamePoint() < Config.FAME_LV10_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(109); //Lv10 170~189
+			setFameLevel(10);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV10_POINT && getFamePoint() < Config.FAME_LV11_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(110); //Lv11 190~199
+			setFameLevel(11);
+			setFamename(FameName);
+		} else if (getFamePoint() >= Config.FAME_LV11_POINT) {
+			FameName = L1WilliamSystemMessage.ShowMessage(111); //Lv12 200以上
+			setFameLevel(12);
+			setFamename(FameName);
+		}		
+	}
+	//稱號系統 fix by testt end
 	
 	// 掉落物品過濾系統 by missu0524
 	public HashSet<Integer> filterList = new HashSet<Integer>();

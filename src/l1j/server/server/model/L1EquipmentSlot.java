@@ -27,9 +27,11 @@ import static l1j.server.server.model.skill.L1SkillId.PHYSICAL_ENCHANT_DEX;
 import static l1j.server.server.model.skill.L1SkillId.PHYSICAL_ENCHANT_STR;
 import static l1j.server.server.model.skill.L1SkillId.STATUS_BRAVE;
 
+import java.lang.Integer;
 import java.util.List;
 
 import l1j.server.server.datatables.SkillsTable;
+import l1j.server.server.datatables.WeaponSoulTable;
 import l1j.server.server.model.Instance.L1ItemInstance;
 import l1j.server.server.model.Instance.L1PcInstance;
 import l1j.server.server.serverpackets.S_Ability;
@@ -38,9 +40,12 @@ import l1j.server.server.serverpackets.S_DelSkill;
 import l1j.server.server.serverpackets.S_Invis;
 import l1j.server.server.serverpackets.S_RemoveObject;
 import l1j.server.server.serverpackets.S_SPMR;
+import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.serverpackets.S_SkillBrave;
 import l1j.server.server.serverpackets.S_SkillHaste;
+import l1j.server.server.serverpackets.S_SkillSound;
 import l1j.server.server.templates.L1Item;
+import l1j.server.server.templates.L1WeaponSoul;
 import l1j.server.server.utils.collections.Lists;
 
 public class L1EquipmentSlot {
@@ -207,6 +212,10 @@ public class L1EquipmentSlot {
 
 	public void set(L1ItemInstance equipment) {
 		L1Item item = equipment.getItem();
+		
+		boolean chklist=false;
+		L1WeaponSoul ws = new L1WeaponSoul();
+//		L1Object objid = equipment.getId();
 		if (item.getType2() == 0) {
 			return;
 		}
@@ -267,14 +276,53 @@ public class L1EquipmentSlot {
 			}
 		}
 		_owner.getEquipSlot().setMagicHelm(equipment);
-
 		if (item.getType2() == 1) {
 			setWeapon(equipment);
 		} else if (item.getType2() == 2) {
+			if (item.getType() == 15){//穿上輔助裝備(左)時會有特殊魔法效果
+				_owner.setCurrentRune(equipment.getId()); //在pcinstance中加入現在穿的輔助裝備id
+				//讀取武魂石的等級
+				for (L1WeaponSoul wss : WeaponSoulTable.getNewInstance().getWeaponSoullList().values()) {
+					if (wss.get_itemobjid() == equipment.getId()) {
+						// 武魂已在清單中
+						chklist=true;
+						ws =  wss;
+					}
+					//System.out.println(wss.get_itemobjid());
+				}					
+				
+				if (chklist){
+					switch (ws.get_type()){
+						case 0:
+							_owner.sendPackets(new S_ServerMessage(166, "感覺到武魂的氣息"));
+							_owner.sendPackets(new S_SkillSound(_owner.getId(), 4229));
+							_owner.broadcastPacket(new S_SkillSound(_owner.getId(), 4229));
+							break;
+						case 1:
+							_owner.sendPackets(new S_ServerMessage(166, "感覺到武魂的力量"));
+							_owner.sendPackets(new S_SkillSound(_owner.getId(), 5288));
+							_owner.broadcastPacket(new S_SkillSound(_owner.getId(), 5288));
+							break;
+						case 2:
+							_owner.sendPackets(new S_ServerMessage(166, "感覺到武魂的強烈力量"));
+							_owner.sendPackets(new S_SkillSound(_owner.getId(), 4469));
+							_owner.broadcastPacket(new S_SkillSound(_owner.getId(), 4469));
+							break;
+						}					
+				}
+				else{
+					_owner.sendPackets(new S_ServerMessage(166, "與武魂建立第一次接觸"));
+					_owner.sendPackets(new S_SkillSound(_owner.getId(), 4661));
+					_owner.broadcastPacket(new S_SkillSound(_owner.getId(), 4661));
+					WeaponSoulTable.getInstance().storeNewWeaponSoul(_owner, equipment.getItemId(), equipment.getId());
+				}
+			}
 			setArmor(equipment);
 			_owner.sendPackets(new S_SPMR(_owner));
 		}
 	}
+
+
 
 	public void remove(L1ItemInstance equipment) {
 		L1Item item = equipment.getItem();
@@ -326,6 +374,7 @@ public class L1EquipmentSlot {
 			}
 		}
 		_owner.getEquipSlot().removeMagicHelm(_owner.getId(), equipment);
+		_owner.setCurrentRune(0);
 
 		if (item.getType2() == 1) {
 			removeWeapon(equipment);

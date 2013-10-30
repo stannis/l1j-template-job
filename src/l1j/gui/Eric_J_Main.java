@@ -1101,24 +1101,24 @@ public class Eric_J_Main extends javax.swing.JFrame implements ActionListener {
 		MI_ReStart.setText("查詢重開時間(T)");
 		M_File.add(MI_ReStart);
 		MB.add(M_File);
-		//M_Edit.setMnemonic('E');
-		//M_Edit.setText("編輯(E)");
-		//MB.add(M_Edit);
-		//M_Special.setMnemonic('S');
-		//M_Special.setText("特殊功能(S)");
-		//MI_Angel.setMnemonic('A');
-		//MI_Angel.setText("大天使祝福(A)");
-		//M_Special.add(MI_Angel);
-		//MI_AllBuff.setMnemonic('B');
-		//MI_AllBuff.setText("終極祝福(B)");
-		//M_Special.add(MI_AllBuff);
-		//MI_AllRess.setMnemonic('R');
-		//MI_AllRess.setText("全體復活補血魔(R)");
-		//M_Special.add(MI_AllRess);
-		//MB.add(M_Special);
+		M_Edit.setMnemonic('E');
+		M_Edit.setText("編輯(E)");
+		MB.add(M_Edit);
+		M_Special.setMnemonic('S');
+		M_Special.setText("特殊功能(S)");
+		MI_Angel.setMnemonic('A');
+		MI_Angel.setText("大天使祝福(A)");
+		M_Special.add(MI_Angel);
+		MI_AllBuff.setMnemonic('B');
+		MI_AllBuff.setText("終極祝福(B)");
+		M_Special.add(MI_AllBuff);
+		MI_AllRess.setMnemonic('R');
+		MI_AllRess.setText("全體復活補血魔(R)");
+		M_Special.add(MI_AllRess);
+		MB.add(M_Special);
 		setJMenuBar(MB);
 		pack();
-	}// </editor-fold>//GEN-END:initComponents
+	} //</editor-fold>//GEN-END:initComponents
 		// 線上玩家清單點兩下
 
 	private void T_PlayerMouseReleased(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_T_PlayerMouseReleased

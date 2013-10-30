@@ -500,17 +500,18 @@ public final class Config {
 	/** FameSystemSettings control */
 	public static boolean FAME_IS_ACTIVE; // 聲望系統
 	
-	public static short FAME_LV1_POINT;
-	public static short FAME_LV2_POINT;
-	public static short FAME_LV3_POINT;
-	public static short FAME_LV4_POINT;
-	public static short FAME_LV5_POINT;
-	public static short FAME_LV6_POINT;
-	public static short FAME_LV7_POINT;
-	public static short FAME_LV8_POINT;
-	public static short FAME_LV9_POINT;
-	public static short FAME_LV10_POINT;
-	public static short FAME_LV11_POINT;
+	// fix short to int by testt
+	public static int FAME_LV1_POINT;
+	public static int FAME_LV2_POINT;
+	public static int FAME_LV3_POINT;
+	public static int FAME_LV4_POINT;
+	public static int FAME_LV5_POINT;
+	public static int FAME_LV6_POINT;
+	public static int FAME_LV7_POINT;
+	public static int FAME_LV8_POINT;
+	public static int FAME_LV9_POINT;
+	public static int FAME_LV10_POINT;
+	public static int FAME_LV11_POINT;
 
 	/** Record Settings */
 	public static byte LOGGING_WEAPON_ENCHANT;
@@ -549,6 +550,7 @@ public final class Config {
 	public static String RSA_KEY_E;
 
 	public static String RSA_KEY_N;
+
 
 	/** Configuration files */
 	public static final String SERVER_CONFIG_FILE = "./config/server.properties";
@@ -1157,28 +1159,28 @@ public final class Config {
 
 			FAME_IS_ACTIVE = Boolean.parseBoolean(fameSettings.getProperty(
 					"FameIsActive", "False"));
-			
-			FAME_LV1_POINT = Short.parseShort(fameSettings.getProperty(
+			// fix Short.parseShort to Integer.parseInt by testt
+			FAME_LV1_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV1Point", "10"));
-			FAME_LV2_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV2_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV2Point", "30"));
-			FAME_LV3_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV3_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV3Point", "50"));
-			FAME_LV4_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV4_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV4Point", "70"));
-			FAME_LV5_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV5_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV5Point", "90"));
-			FAME_LV6_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV6_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV6Point", "110"));
-			FAME_LV7_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV7_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV7Point", "130"));
-			FAME_LV8_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV8_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV8Point", "150"));
-			FAME_LV9_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV9_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV9Point", "170"));
-			FAME_LV10_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV10_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV10Point", "190"));
-			FAME_LV11_POINT = Short.parseShort(fameSettings.getProperty(
+			FAME_LV11_POINT = Integer.parseInt(fameSettings.getProperty(
 					"FameLV11Point", "200"));
 
 		} catch (Exception e) {
@@ -1615,30 +1617,31 @@ public final class Config {
 			Chat_Delay_Time = Short.valueOf(pValue); //  公頻&買賣頻道發話延遲
 		}
 		// famesystem.properties
+		// fix Short.valueof to Integer.parseInt by testt
 		else if (pName.equalsIgnoreCase("FameIsActive")) {
 			FAME_IS_ACTIVE = Boolean.valueOf(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV1Point")) {
-			FAME_LV1_POINT = Short.valueOf(pValue);
+			FAME_LV1_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV2Point")) {
-			FAME_LV2_POINT = Short.valueOf(pValue);
+			FAME_LV2_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV3Point")) {
-			FAME_LV3_POINT = Short.valueOf(pValue);
+			FAME_LV3_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV4Point")) {
-			FAME_LV4_POINT = Short.valueOf(pValue);
+			FAME_LV4_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV5Point")) {
-			FAME_LV5_POINT = Short.valueOf(pValue);
+			FAME_LV5_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV6Point")) {
-			FAME_LV6_POINT = Short.valueOf(pValue);
+			FAME_LV6_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV7Point")) {
-			FAME_LV7_POINT = Short.valueOf(pValue);
+			FAME_LV7_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV8Point")) {
-			FAME_LV8_POINT = Short.valueOf(pValue);
+			FAME_LV8_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV9Point")) {
-			FAME_LV9_POINT = Short.valueOf(pValue);
+			FAME_LV9_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV10Point")) {
-			FAME_LV10_POINT = Short.valueOf(pValue);
+			FAME_LV10_POINT = Integer.parseInt(pValue);
 		} else if (pName.equalsIgnoreCase("FameLV11Point")) {
-			FAME_LV11_POINT = Short.valueOf(pValue);
+			FAME_LV11_POINT = Integer.parseInt(pValue);
 		}
 		// record.properties
 		else if (pName.equalsIgnoreCase("LoggingWeaponEnchant")) {
