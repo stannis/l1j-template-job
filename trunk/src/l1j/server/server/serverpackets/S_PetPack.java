@@ -57,7 +57,7 @@ public class S_PetPack extends ServerBasePacket {
 		writeC(status);
 		writeD(0); // ??
 		writeS(null); // ??
-		writeS(pet.getMaster() != null ? pet.getMaster().getName() : "");
+		writeS(pet.getMaster() != null ? pet.getMaster().getName()+pc.getFamename() : "");
 		writeC(0); // ??
 		// HPのパーセント
 		if ((pet.getMaster() != null) && (pet.getMaster().getId() == pc.getId())) {

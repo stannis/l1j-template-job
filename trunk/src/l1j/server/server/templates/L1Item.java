@@ -109,7 +109,8 @@ public abstract class L1Item implements Cloneable, Serializable {
 	 *         <p>
 	 *         [armor]<br>
 	 *         1:helm, 2:armor, 3:T, 4:cloak, 5:glove, 6:boots, 7:shield,
-	 *         8:amulet, 9:ring, 10:belt, 11:ring2, 12:earring
+	 *         8:amulet, 9:ring, 10:belt, 11:ring2, 12:earring, 13:guarder
+	 *         14:rune_r, 15:rune_l, 16:rune_m
 	 */
 	public int getType() {
 		return _type;

@@ -194,7 +194,20 @@ public class C_NPCAction extends ClientBasePacket {
 					String msg[] = { "物品過濾清單已全部清除囉！" };
 					target.sendPackets(new S_NPCTalkReturn(target.getId(), "filter_listn", msg));
 					return;
-				} else {
+				// 武魂強化清單	
+				} else if (s.equalsIgnoreCase("clearFilterList")) { 
+					target.clearFilterList();
+					String msg[] = { "物品過濾清單已全部清除囉！" };
+					target.sendPackets(new S_NPCTalkReturn(target.getId(), "filter_listn", msg));
+					return;
+				// 武魂進食清單
+				} else if (s.equalsIgnoreCase("clearFilterList")) { 
+					target.clearFilterList();
+					String msg[] = { "物品過濾清單已全部清除囉！" };
+					target.sendPackets(new S_NPCTalkReturn(target.getId(), "filter_listn", msg));
+					return;
+				}
+				else {
 					int awakeSkillId = target.getAwakeSkillId();
 					if ((awakeSkillId == AWAKEN_ANTHARAS)
 							|| (awakeSkillId == AWAKEN_FAFURION)
@@ -5184,10 +5197,10 @@ public class C_NPCAction extends ClientBasePacket {
 	private String enterUb(L1PcInstance pc, int npcId) {
 		L1UltimateBattle ub = UBTable.getInstance().getUbForNpcId(npcId);
 		if (!ub.isActive() || !ub.canPcEnter(pc)) { // 時間外
-			return "colos2";
+			//return "colos2";時間外也可參加 by testt
 		}
-		if (ub.isNowUb()) { // 競技中
-			return "colos1";
+		if (ub.isNowUb()) { // 競技中也可參加by testt
+			//return "colos1";
 		}
 		if (ub.getMembersCount() >= ub.getMaxPlayer()) { // 定員オーバー
 			return "colos4";
@@ -5195,8 +5208,18 @@ public class C_NPCAction extends ClientBasePacket {
 
 		ub.addMember(pc); // メンバーに追加
 		L1Location loc = ub.getLocation().randomLocation(10, false);
-		L1Teleport.teleport(pc, loc.getX(), loc.getY(), ub.getMapId(), 5, true);
-		return "";
+		//將玩家傳送到追憶之島固定位置 by testt
+		if (ub.getMapId() == 701){
+			int rndx = Random.nextInt(4);
+			int rndy = Random.nextInt(4);
+			int locx = 32766 + rndx;
+			int locy = 32778 + rndy;
+			L1Teleport.teleport(pc, locx, locy, ub.getMapId(), 5, true);
+		}
+		else{
+			L1Teleport.teleport(pc, loc.getX(), loc.getY(), ub.getMapId(), 5, true);	
+		}
+				return "";
 	}
 
 	private String enterHauntedHouse(L1PcInstance pc) {

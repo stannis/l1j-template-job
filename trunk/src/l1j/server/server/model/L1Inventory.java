@@ -28,6 +28,7 @@ import l1j.server.server.datatables.ItemTable;
 import l1j.server.server.datatables.LetterTable;
 import l1j.server.server.datatables.PetTable;
 import l1j.server.server.datatables.RaceTicketTable;
+import l1j.server.server.datatables.WeaponSoulTable;
 import l1j.server.server.model.Instance.L1FurnitureInstance;
 import l1j.server.server.model.Instance.L1ItemInstance;
 import l1j.server.server.templates.L1Item;
@@ -372,6 +373,8 @@ public class L1Inventory extends L1Object {
 				}
 			} else if (item.getItemId() == 40309) {// Race Tickets
 				RaceTicketTable.getInstance().deleteTicket(item.getId());
+			} else if ((itemId >= 300001) && (itemId <= 300006)) {// 武魂道具id
+				WeaponSoulTable.getNewInstance().deleteWeaponSoul(item.getId());//武魂道具刪除即移除武魂資料庫中的資料
 			}
 			deleteItem(item);
 			L1World.getInstance().removeObject(item);

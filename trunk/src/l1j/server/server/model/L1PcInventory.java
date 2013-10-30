@@ -15,7 +15,9 @@
 package l1j.server.server.model;
 
 import java.text.DecimalFormat;
+
 import l1j.server.server.utils.Random;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 // 道具天數刪除系統
@@ -23,8 +25,14 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 // end
 
+
+
+
+
 import l1j.server.Config;
+import l1j.server.server.datatables.PetTable;
 import l1j.server.server.datatables.RaceTicketTable;
+import l1j.server.server.datatables.WeaponSoulTable;
 import l1j.server.server.model.Instance.L1ItemInstance;
 import l1j.server.server.model.Instance.L1PcInstance;
 import l1j.server.server.model.Instance.L1PetInstance;
@@ -39,9 +47,12 @@ import l1j.server.server.serverpackets.S_ItemName;
 import l1j.server.server.serverpackets.S_ItemAmount;
 import l1j.server.server.serverpackets.S_PacketBox;
 import l1j.server.server.serverpackets.S_ServerMessage;
+import l1j.server.server.serverpackets.S_SkillSound;
 import l1j.server.server.storage.CharactersItemStorage;
 import l1j.server.server.templates.L1Item;
+import l1j.server.server.templates.L1Pet;
 import l1j.server.server.templates.L1RaceTicket;
+import l1j.server.server.templates.L1WeaponSoul;
 
 public class L1PcInventory extends L1Inventory {
 
@@ -255,6 +266,26 @@ public class L1PcInventory extends L1Inventory {
 	@Override
 	public void insertItem(L1ItemInstance item) {
 		_owner.sendPackets(new S_AddItem(item));
+		boolean chklist=false;
+//		L1WeaponSoul ws = new L1WeaponSoul();
+		L1WeaponSoul _l1WeaponSoul = WeaponSoulTable.getNewInstance().getTemplate(item.getId());
+		//_owner.sendPackets(new S_ServerMessage(166, "得到物品"));
+		if ((item.getItemId() >= 300001) && (item.getItemId() <= 300006)){
+			for (L1WeaponSoul wss : WeaponSoulTable.getNewInstance().getWeaponSoullList().values()) {
+				if (wss.get_itemobjid() == item.getId()) {
+					// 武魂已在清單中
+					chklist=true;
+				
+				}
+				//System.out.println(wss.get_itemobjid());
+			}					
+			
+			if (chklist){
+				if (_l1WeaponSoul.get_owner() != _owner.getId()) {
+					WeaponSoulTable.getInstance().updateOwner(_l1WeaponSoul, _owner.getId());
+				}
+			}
+		}
 		if (item.getItem().getWeight() != 0) {
 			_owner.sendPackets(new S_PacketBox(S_PacketBox.WEIGHT,
 					getWeight242()));
@@ -525,7 +556,7 @@ public class L1PcInventory extends L1Inventory {
 		}
 	}
 
-	// ＤＢのcharacter_itemsから削除
+	// ＤＢのcharacter_itemsから削除/
 	@Override
 	public void deleteItem(L1ItemInstance item) {
 		try {

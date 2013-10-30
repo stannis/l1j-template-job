@@ -102,6 +102,8 @@ import l1j.server.server.templates.L1BookMark;
 import l1j.server.server.templates.L1GetBackRestart;
 import l1j.server.server.templates.L1Skills;
 import l1j.server.server.utils.SQLUtil;
+import l1j.william.L1WilliamSystemMessage;
+
 import java.util.Collection; // 玩家上線是否通知在線ＧＭ 4/5
 import java.util.Calendar; // 殷海薩的祝福
 
@@ -416,6 +418,9 @@ public class C_LoginToServer extends ClientBasePacket {
 				}
 		}
 		// end
+		
+		//設定稱號相關參數 by testt
+		pc.checkFamename();
 	}
 
 	//private void items(L1PcInstance pc) {

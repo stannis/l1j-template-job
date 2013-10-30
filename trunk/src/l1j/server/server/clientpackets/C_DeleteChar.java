@@ -21,10 +21,14 @@ import java.util.logging.Logger;
 import l1j.server.Config;
 import l1j.server.server.ClientThread;
 import l1j.server.server.datatables.CharacterTable;
+import l1j.server.server.datatables.WeaponSoulTable;
 import l1j.server.server.model.L1Clan;
 import l1j.server.server.model.L1World;
 import l1j.server.server.model.Instance.L1PcInstance;
 import l1j.server.server.serverpackets.S_DeleteCharOK;
+import l1j.server.server.serverpackets.S_ServerMessage;
+import l1j.server.server.serverpackets.S_SkillSound;
+import l1j.server.server.templates.L1WeaponSoul;
 
 // Referenced classes of package l1j.server.server.clientpackets:
 // ClientBasePacket, C_DeleteChar
@@ -100,6 +104,12 @@ public class C_DeleteChar extends ClientBasePacket {
 			}
 			CharacterTable.getInstance().deleteCharacter(
 					client.getAccountName(), name);
+			for (L1WeaponSoul wss : WeaponSoulTable.getNewInstance().getWeaponSoullList().values()) {
+				if (wss.get_owner() == pc.getId()) {
+					// 查找武魂資料庫中有沒有此擁有者(玩家)
+					WeaponSoulTable.getNewInstance().deleteWeaponSoul(wss.get_itemobjid());//依照擁有者刪除武魂資料庫
+				}
+			}
 		} catch (Exception e) {
 			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 			client.close();

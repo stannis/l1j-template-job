@@ -49,10 +49,13 @@ public class C_Shop extends ClientBasePacket {
 		}
 
 		int mapId = pc.getMapId();
+		//*GM可以在任何地方開設個人商店
+		if (!pc.isGm()){
 		if ((mapId != 340) && (mapId != 350) && (mapId != 360)
 				&& (mapId != 370)) {
 			pc.sendPackets(new S_ServerMessage(876)); // この場所では個人商店を開けません。
 			return;
+		}
 		}
 
 		List<L1PrivateShopSellList> sellList = pc.getSellList();

@@ -55,7 +55,7 @@ public class MySqlCharacterStorage implements CharacterStorage {
 			pc.setAccountName(rs.getString("account_name"));
 			pc.setId(rs.getInt("objid"));
 			pc.setName(rs.getString("char_name"));
-			pc.setFamePoint(rs.getShort("FamePoint")); // sosodemon add 聲望系統 BY.SosoDEmoN
+			pc.setFamePoint(rs.getInt("FamePoint")); // sosodemon add 聲望系統 BY.SosoDEmoN
 			pc.setBirthday((Timestamp) rs.getTimestamp("birthday"));
 			pc.setHighLevel(rs.getInt("HighLevel"));
 			pc.setExp(rs.getInt("Exp"));
@@ -190,7 +190,7 @@ public class MySqlCharacterStorage implements CharacterStorage {
 			pstm.setString(++i, pc.getAccountName());
 			pstm.setInt(++i, pc.getId());
 			pstm.setString(++i, pc.getName());
-			pstm.setShort(++i, pc.getFamePoint()); // sosodemon add 聲望系統 BY.SosoDEmoN
+			pstm.setInt(++i, pc.getFamePoint()); // sosodemon add 聲望系統 BY.SosoDEmoN
 			pstm.setInt(++i, pc.getSimpleBirthday());
 			pstm.setInt(++i, pc.getLevel());
 			pstm.setInt(++i, pc.getHighLevel());
@@ -329,7 +329,7 @@ public class MySqlCharacterStorage implements CharacterStorage {
 			con = L1DatabaseFactory.getInstance().getConnection();
 			pstm = con
 					.prepareStatement("UPDATE characters SET FamePoint=?,level=?,HighLevel=?,Exp=?,MaxHp=?,CurHp=?,MaxMp=?,CurMp=?,Ac=?,Str=?,Con=?,Dex=?,Cha=?,Intel=?,Wis=?,Status=?,Class=?,Sex=?,Type=?,Heading=?,LocX=?,LocY=?,MapID=?,Food=?,Lawful=?,Title=?,ClanID=?,Clanname=?,ClanRank=?,BonusStatus=?,ElixirStatus=?,ElfAttr=?,PKcount=?,PkCountForElf=?,ExpRes=?,PartnerID=?,AccessLevel=?,OnlineStatus=?,HomeTownID=?,Contribution=?,HellTime=?,Banned=?,Karma=?,LastPk=?,LastPkForElf=?,DeleteTime=?, LastActive=?, EinhasadPoint=? WHERE objid=?");
-			pstm.setShort(++i, pc.getFamePoint()); // sosodemon add 聲望系統 BY.SosoDEmoN
+			pstm.setInt(++i, pc.getFamePoint()); // sosodemon add 聲望系統 BY.SosoDEmoN
 			pstm.setInt(++i, pc.getLevel());
 			pstm.setInt(++i, pc.getHighLevel());
 			pstm.setInt(++i, pc.getExp());

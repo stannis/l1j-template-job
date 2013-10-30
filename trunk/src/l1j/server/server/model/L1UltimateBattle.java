@@ -98,7 +98,7 @@ public class L1UltimateBattle {
 
 	private int _mpr;
 
-	private static int BEFORE_MINUTE = 5; // 5分前から入場開始
+	private static int BEFORE_MINUTE = 1; // 5分前から入場開始testt
 
 	private Set<Integer> _managers = new HashSet<Integer>();
 
@@ -288,7 +288,12 @@ public class L1UltimateBattle {
 			sendMessage(MSGID_COUNT, "1"); // 1秒前
 
 			Thread.sleep(1000);
-			sendMessage(MSGID_START, "アルティメット バトル"); // スタート
+			if (_mapId == 701){
+				sendMessage(MSGID_START, "[追憶之島BOSS]"); // スタート	
+			}
+			else {
+				sendMessage(MSGID_START, "[無限大戰眾魔物]"); // スタート	
+			}
 			removeRetiredMembers();
 		}
 
@@ -306,7 +311,7 @@ public class L1UltimateBattle {
 			int wait = WAIT_TIME_TABLE[curRound - 1];
 			for (int i = 0; i < wait; i++) {
 				Thread.sleep(10000);
-				// removeRetiredMembers();
+				 //removeRetiredMembers();
 			}
 			removeRetiredMembers();
 		}
@@ -333,11 +338,12 @@ public class L1UltimateBattle {
 						}
 
 						Thread.sleep(spawn.getSpawnDelay() * 1000);
-						// removeRetiredMembers();
+						 //removeRetiredMembers();
 					}
 
 					if (getMembersCount() > 0) {
 						spawnSupplies(round);
+						sendMessage(166, "地上冒出了眾多物品，見慾不迷乃君子");//testt
 					}
 
 					waitForNextRound(round);
@@ -686,25 +692,25 @@ public class L1UltimateBattle {
 		// クラス
 		StringBuilder classesBuff = new StringBuilder();
 		if (_enterDarkelf) {
-			classesBuff.append("ダーク エルフ ");
+			classesBuff.append("黑暗妖精    ");
 		}
 		if (_enterMage) {
-			classesBuff.append("ウィザード ");
+			classesBuff.append("王族 ");
 		}
 		if (_enterElf) {
-			classesBuff.append("エルフ ");
+			classesBuff.append("妖精 ");
 		}
 		if (_enterKnight) {
-			classesBuff.append("ナイト ");
+			classesBuff.append("騎士 ");
 		}
 		if (_enterRoyal) {
-			classesBuff.append("プリンス ");
+			classesBuff.append("法師 ");
 		}
 		if (_enterDragonKnight) {
-			classesBuff.append("ドラゴンナイト ");
+			classesBuff.append("龍騎士 ");
 		}
 		if (_enterIllusionist) {
-			classesBuff.append("イリュージョニスト ");
+			classesBuff.append("幻術師 ");
 		}
 		String classes = classesBuff.toString().trim();
 		// 性別
