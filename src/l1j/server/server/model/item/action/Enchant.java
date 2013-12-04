@@ -14,6 +14,7 @@
  */
 package l1j.server.server.model.item.action;
 
+
 import l1j.server.Config;
 import l1j.server.server.ClientThread;
 import l1j.server.server.datatables.LogEnchantTable;
@@ -26,7 +27,7 @@ import l1j.server.server.serverpackets.S_OwnCharAttrDef;
 import l1j.server.server.serverpackets.S_SPMR;
 import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.templates.L1Armor;
-import l1j.server.server.utils.Random;
+import l1j.server.server.utils.random.Random;
 
 public class Enchant {
 
@@ -104,6 +105,11 @@ public class Enchant {
 				// \f1%0%s 持續發出 產生激烈的 藍色的 光芒，但是沒有任何事情發生。
 				pc.sendPackets(new S_ServerMessage(160, l1iteminstance1.getLogName(), "$245", "$248"));
 			} else {
+				//增加角色專屬裝備失敗歸零by testt
+				if (l1iteminstance1.getStepLevel() != 0 ) {
+					SuccessEnchant(pc, l1iteminstance1, client, -l1iteminstance1.getEnchantLevel());
+					return;
+				}
 				FailureEnchant(pc, l1iteminstance1);
 			}
 		}
@@ -177,6 +183,11 @@ public class Enchant {
 				// \f1%0%s 持續發出 產生激烈的 銀色的 光芒，但是沒有任何事情發生。
 				pc.sendPackets(new S_ServerMessage(160, l1iteminstance1.getLogName(), "$252", "$248"));
 			} else {
+				//增加角色專屬裝備失敗歸零by testt
+				if (l1iteminstance1.getStepLevel() != 0 ) {
+					SuccessEnchant(pc, l1iteminstance1, client, -l1iteminstance1.getEnchantLevel());
+					return;
+				}
 				FailureEnchant(pc, l1iteminstance1);
 			}
 		}
@@ -287,12 +298,122 @@ public class Enchant {
 			pc.getInventory().removeItem(l1iteminstance, 1);
 			return;
 		}
+		// 刪除
+		pc.getInventory().removeItem(l1iteminstance, 1);
 		SuccessEnchant(pc, l1iteminstance1, client, 1);
 		// 更新
 		pc.sendPackets(new S_ItemStatus(l1iteminstance1));
 		pc.getInventory().saveEnchantAccessory(l1iteminstance1, itemStatus);
-		// 刪除
+	}
+	
+	// 升級石
+	public static void scrollOfEnchantItemLevel(L1PcInstance pc, L1ItemInstance l1iteminstance
+			, L1ItemInstance l1iteminstance1, ClientThread client) {
+		int itemId = l1iteminstance.getItem().getItemId();
+		//int weaponId = l1iteminstance1.getItem().getItemId();
+		int enchant_level = l1iteminstance1.getItemLevel();
+		int stone_level = itemId - 61000;//升級石從61001開始編號
+		int new_enchant_level = stone_level;
+		int check_level = new_enchant_level - enchant_level;
+		int check_rebirth = pc.getReBirth() + enchant_level;
+		if ((l1iteminstance1 == null) || (l1iteminstance1.getItem().getType2() == 0)
+				|| (enchant_level >= 9) || (l1iteminstance1.getBless() >= 128)) {//若非裝備或是裝備等級已到9，則沒有任何事情發生
+			pc.sendPackets(new S_ServerMessage(79));
+			return;
+		}
+		if (check_level != 1 || (new_enchant_level > 4 && new_enchant_level > check_rebirth)) {
+			pc.sendPackets(new S_ServerMessage(166, "不符合升級條件，請確認裝備等級或角色轉生次數"));
+			return;
+		}
+		pc.sendPackets(new S_ServerMessage(166, "你的 " + l1iteminstance1.getLogName() + " 成功升級至 " + new_enchant_level +" 級"));
+		if (l1iteminstance1.getItem().getType2() == 2 
+				&& l1iteminstance1.getItem().getType() < 8
+				&& l1iteminstance1.isEquipped()) {
+			//即時更新近戰防禦減傷修正
+			if (new_enchant_level != 1)
+				pc.addShortStepFix(-(l1iteminstance1.getStepLevel() * l1iteminstance1.getItemLevel()));
+			l1iteminstance1.setItemLevel(new_enchant_level);
+			pc.addShortStepFix(l1iteminstance1.getStepLevel() * l1iteminstance1.getItemLevel());
+			// end
+		} else {
+			l1iteminstance1.setItemLevel(new_enchant_level);
+		}
+		//更新客戶端物品資料
+		client.getActiveChar().getInventory().updateItem(l1iteminstance1, L1PcInventory.COL_ITEM_ENCHANT_LEVEL);
+		//DB儲存物品資料
+		client.getActiveChar().getInventory().saveItem(l1iteminstance1, L1PcInventory.COL_ITEM_ENCHANT_LEVEL);
+		//刪除升級石
 		pc.getInventory().removeItem(l1iteminstance, 1);
+		//儲存物品有更動的項目至資料庫
+		pc.saveInventory();
+	}
+	
+	// 專屬裝備賦予卷軸
+	public static void scrollOfEnchantStepLevel(L1PcInstance pc, L1ItemInstance l1iteminstance
+			, L1ItemInstance l1iteminstance1, ClientThread client) {
+		int itemId = l1iteminstance.getItem().getItemId();
+		//int weaponId = l1iteminstance1.getItem().getItemId();
+		int enchant_level = l1iteminstance1.getStepLevel();
+		int scroll_level = itemId - 60050;//專屬防具卷軸從60050開始編號
+		if (itemId > 60054)
+			scroll_level = itemId - 60054;//專屬武器卷軸從60054開始編號
+		int new_enchant_level = scroll_level;
+		int check_level = new_enchant_level - enchant_level;
+		String step = "";
+		if ((l1iteminstance1 == null) || (l1iteminstance1.getItem().getType2() == 0)
+				|| (enchant_level >= 4) || (l1iteminstance1.getBless() >= 128)) {//若非裝備或是裝備階級已到S，則沒有任何事情發生
+			pc.sendPackets(new S_ServerMessage(79));
+			return;
+		}
+		if ((l1iteminstance1.getItem().getType2() == 2 && l1iteminstance1.getItem().getType() > 7)
+				|| (l1iteminstance1.getItem().getType2() == 1 && itemId < 60055)) {
+			pc.sendPackets(new S_ServerMessage(166, "不符合升階條件，此卷軸只適用於防具"));
+			return;
+		} else if (l1iteminstance1.getItem().getType2() == 2 && itemId > 60054) {
+			pc.sendPackets(new S_ServerMessage(166, "不符合升階條件，此卷軸只適用於武器"));
+			return;
+		}
+			
+		if (check_level != 1) {
+			pc.sendPackets(new S_ServerMessage(166, "不符合升階條件，請確認裝備階級"));
+			return;
+		}
+		switch (new_enchant_level) {
+		case 1:
+			step = "C";
+			break;
+		case 2:
+			step = "B";
+			break;
+		case 3:
+			step = "A";
+			break;
+		case 4:
+			step = "S";
+			break;
+		}
+		pc.sendPackets(new S_ServerMessage(166, "你的 " + l1iteminstance1.getLogName() + " 成功升階至 " + step +" 級"));
+		if (l1iteminstance1.getItem().getType2() == 2 
+				&& l1iteminstance1.getItem().getType() < 8
+				&& l1iteminstance1.isEquipped()) {
+			//即時更新近戰防禦減傷修正
+			if (new_enchant_level != 1)
+				pc.addShortStepFix(-(l1iteminstance1.getStepLevel() * l1iteminstance1.getItemLevel()));
+			l1iteminstance1.setStepLevel(new_enchant_level);
+			pc.addShortStepFix(l1iteminstance1.getStepLevel() * l1iteminstance1.getItemLevel());
+			// end
+		} else {
+			l1iteminstance1.setStepLevel(new_enchant_level);
+		}
+			
+		//更新客戶端物品資料
+		client.getActiveChar().getInventory().updateItem(l1iteminstance1, L1PcInventory.COL_STEP_ENCHANT_LEVEL);
+		//DB儲存物品資料
+		client.getActiveChar().getInventory().saveItem(l1iteminstance1, L1PcInventory.COL_STEP_ENCHANT_LEVEL);
+		//刪除賦予卷軸
+		pc.getInventory().removeItem(l1iteminstance, 1);
+		//儲存物品有更動的項目至資料庫 by testt
+		pc.saveInventory();
 	}
 
 	public static void scrollOfEnchantWeaponAttr(L1PcInstance pc, L1ItemInstance l1iteminstance
@@ -355,6 +476,8 @@ public class Enchant {
 			pc.sendPackets(new S_ServerMessage(1411, l1iteminstance1.getLogName())); // 對\f1%0附加魔法失敗。
 		}
 		pc.getInventory().removeItem(l1iteminstance, 1);
+		//儲存物品有更動的項目至資料庫 by testt
+		pc.saveInventory();
 	}
 
 	// 象牙塔對武器施法的卷軸
@@ -420,8 +543,17 @@ public class Enchant {
 		String[][] sb = { {"", "", "", "", ""}
 						, {"$247", "", "$247", "$248", "$248"}
 						, {"$247", "", "$247", "$248", "$248"}};
-		String sa_temp = sa[itemType2][i + 1];
-		String sb_temp = sb[itemType2][i + 1];
+		//增加武防未衝過歸零的判斷by testt
+		String sa_temp;
+		String sb_temp;
+		if (i < -1) {
+			sa_temp = sa[itemType2][0];
+			sb_temp = sb[itemType2][0];
+		} else {
+			sa_temp = sa[itemType2][i + 1];
+			sb_temp = sb[itemType2][i + 1];
+		}
+		
 
 		pc.sendPackets(new S_ServerMessage(161, item.getLogName(), sa_temp, sb_temp));
 		int oldEnchantLvl = item.getEnchantLevel();
@@ -475,6 +607,8 @@ public class Enchant {
 			}
 			pc.sendPackets(new S_OwnCharAttrDef(pc));
 		}
+		//儲存物品有更動的項目至資料庫 by testt
+		pc.saveInventory();
 	}
 
 	// 強化失敗
@@ -487,12 +621,14 @@ public class Enchant {
 		}
 		pc.sendPackets(new S_ServerMessage(164, item.getLogName(), sa[itemType2])); // \f1%0%s 強烈的發出%1光芒就消失了。
 		pc.getInventory().removeItem(item, item.getCount());
+		//儲存物品有更動的項目至資料庫 by testt
+		pc.saveInventory();
 	}
 
 	// 隨機強化等級
 	private static int RandomELevel(L1ItemInstance item, int itemId) {
 		if ((itemId == L1ItemId.B_SCROLL_OF_ENCHANT_ARMOR) || (itemId == L1ItemId.B_SCROLL_OF_ENCHANT_WEAPON)
-				|| (itemId == 140129) || (itemId == 140130)) {
+				|| (itemId == 140129) || (itemId == 140130) || (itemId == 60028) || (itemId == 60029)) {
 			if (item.getEnchantLevel() <= 2) {
 				int j = Random.nextInt(100) + 1;
 				if (j < 32) {
@@ -513,4 +649,5 @@ public class Enchant {
 		}
 		return 1;
 	}
+
 }

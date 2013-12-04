@@ -86,7 +86,7 @@ public class S_OwnCharPack extends ServerBasePacket {
 		if (pc.isGhost()) {
 			status |= STATUS_GHOST;
 		}
-
+		
 		// int addbyte = 0;
 		writeC(Opcodes.S_OPCODE_CHARPACK);
 		writeH(pc.getX());

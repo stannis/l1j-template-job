@@ -31,6 +31,8 @@ public class MySqlCharacterStorage implements CharacterStorage {
 	private static Logger _log = Logger.getLogger(MySqlCharacterStorage.class
 			.getName());
 
+	
+	@SuppressWarnings("resource")
 	@Override
 	public L1PcInstance loadCharacter(String charName) {
 		L1PcInstance pc = null;
@@ -55,9 +57,11 @@ public class MySqlCharacterStorage implements CharacterStorage {
 			pc.setAccountName(rs.getString("account_name"));
 			pc.setId(rs.getInt("objid"));
 			pc.setName(rs.getString("char_name"));
+			pc.setReBirth(rs.getInt("reBirth"));// add 轉生次數系統 by testt
 			pc.setFamePoint(rs.getInt("FamePoint")); // sosodemon add 聲望系統 BY.SosoDEmoN
 			pc.setBirthday((Timestamp) rs.getTimestamp("birthday"));
 			pc.setHighLevel(rs.getInt("HighLevel"));
+			pc.setMaxLvl(rs.getInt("maxLvl"));// add 最大等級 by testt
 			pc.setExp(rs.getInt("Exp"));
 			pc.addBaseMaxHp(rs.getShort("MaxHp"));
 			short currentHp = rs.getShort("CurHp");
@@ -165,7 +169,28 @@ public class MySqlCharacterStorage implements CharacterStorage {
 			pc.setMoveSpeed(0);
 			pc.setBraveSpeed(0);
 			pc.setGmInvis(false);
+			
+			//testt
+			pstm.execute();
+			pstm = con
+					.prepareStatement("SELECT * FROM characters_support WHERE char_name=?");
+			pstm.setString(1, charName);
 
+			rs = pstm.executeQuery();
+			if (rs.next()) {
+				/*
+				 * 新增贊助資料讀取by testt。
+				 */
+				pc.isSupport(true);//如果有找到資料，則判定有贊助
+				pc.setRemainCoin(rs.getInt("RemainCoin"));
+				pc.setTotalSupport(rs.getInt("totalSupport"));
+				if (rs.getInt("first_support_reward") != 0) {
+					pc.isfirstSupportReward(true);
+				}
+				pc.setRewardStep(rs.getInt("rewardStep"));
+				pc.checkRewardStep(rs.getInt("check_reward_step"));
+			}			
+			pstm.execute();
 			_log.finest("restored char data: ");
 		} catch (SQLException e) {
 			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
@@ -186,14 +211,16 @@ public class MySqlCharacterStorage implements CharacterStorage {
 			int i = 0;
 			con = L1DatabaseFactory.getInstance().getConnection();
 			pstm = con
-					.prepareStatement("INSERT INTO characters SET account_name=?,objid=?,char_name=?,FamePoint=?,birthday=?,level=?,HighLevel=?,Exp=?,MaxHp=?,CurHp=?,MaxMp=?,CurMp=?,Ac=?,Str=?,Con=?,Dex=?,Cha=?,Intel=?,Wis=?,Status=?,Class=?,Sex=?,Type=?,Heading=?,LocX=?,LocY=?,MapID=?,Food=?,Lawful=?,Title=?,ClanID=?,Clanname=?,ClanRank=?,BonusStatus=?,ElixirStatus=?,ElfAttr=?,PKcount=?,PkCountForElf=?,ExpRes=?,PartnerID=?,AccessLevel=?,OnlineStatus=?,HomeTownID=?,Contribution=?,Pay=?,HellTime=?,Banned=?,Karma=?,LastPk=?,LastPkForElf=?,DeleteTime=?");
+					.prepareStatement("INSERT INTO characters SET account_name=?,objid=?,char_name=?,reBirth=?,FamePoint=?,birthday=?,level=?,HighLevel=?,maxLvl=?,Exp=?,MaxHp=?,CurHp=?,MaxMp=?,CurMp=?,Ac=?,Str=?,Con=?,Dex=?,Cha=?,Intel=?,Wis=?,Status=?,Class=?,Sex=?,Type=?,Heading=?,LocX=?,LocY=?,MapID=?,Food=?,Lawful=?,Title=?,ClanID=?,Clanname=?,ClanRank=?,BonusStatus=?,ElixirStatus=?,ElfAttr=?,PKcount=?,PkCountForElf=?,ExpRes=?,PartnerID=?,AccessLevel=?,OnlineStatus=?,HomeTownID=?,Contribution=?,Pay=?,HellTime=?,Banned=?,Karma=?,LastPk=?,LastPkForElf=?,DeleteTime=?");
 			pstm.setString(++i, pc.getAccountName());
 			pstm.setInt(++i, pc.getId());
 			pstm.setString(++i, pc.getName());
+			pstm.setInt(++i, pc.getReBirth());// add 轉生次數系統 by testt
 			pstm.setInt(++i, pc.getFamePoint()); // sosodemon add 聲望系統 BY.SosoDEmoN
 			pstm.setInt(++i, pc.getSimpleBirthday());
 			pstm.setInt(++i, pc.getLevel());
 			pstm.setInt(++i, pc.getHighLevel());
+			pstm.setInt(++i, pc.getMaxLvl());// add 最大等級 by testt
 			pstm.setInt(++i, pc.getExp());
 			pstm.setInt(++i, pc.getBaseMaxHp());
 			int hp = pc.getCurrentHp();
@@ -309,6 +336,14 @@ public class MySqlCharacterStorage implements CharacterStorage {
 					.prepareStatement("DELETE FROM characters WHERE char_name=?");
 			pstm.setString(1, charName);
 			pstm.execute();
+			pstm = con
+					.prepareStatement("DELETE FROM characters_support WHERE char_name=?");
+			pstm.setString(1, charName);
+			pstm.execute();
+			pstm = con
+					.prepareStatement("DELETE FROM characters_support WHERE char_name=?");
+			pstm.setString(1, charName);
+			pstm.execute();
 
 		} catch (SQLException e) {
 			throw e;
@@ -320,6 +355,7 @@ public class MySqlCharacterStorage implements CharacterStorage {
 		}
 	}
 
+	@SuppressWarnings("resource")
 	@Override
 	public void storeCharacter(L1PcInstance pc) {
 		Connection con = null;
@@ -328,10 +364,12 @@ public class MySqlCharacterStorage implements CharacterStorage {
 			int i = 0;
 			con = L1DatabaseFactory.getInstance().getConnection();
 			pstm = con
-					.prepareStatement("UPDATE characters SET FamePoint=?,level=?,HighLevel=?,Exp=?,MaxHp=?,CurHp=?,MaxMp=?,CurMp=?,Ac=?,Str=?,Con=?,Dex=?,Cha=?,Intel=?,Wis=?,Status=?,Class=?,Sex=?,Type=?,Heading=?,LocX=?,LocY=?,MapID=?,Food=?,Lawful=?,Title=?,ClanID=?,Clanname=?,ClanRank=?,BonusStatus=?,ElixirStatus=?,ElfAttr=?,PKcount=?,PkCountForElf=?,ExpRes=?,PartnerID=?,AccessLevel=?,OnlineStatus=?,HomeTownID=?,Contribution=?,HellTime=?,Banned=?,Karma=?,LastPk=?,LastPkForElf=?,DeleteTime=?, LastActive=?, EinhasadPoint=? WHERE objid=?");
+					.prepareStatement("UPDATE characters SET reBirth=?,FamePoint=?,level=?,HighLevel=?,maxLvl=?,Exp=?,MaxHp=?,CurHp=?,MaxMp=?,CurMp=?,Ac=?,Str=?,Con=?,Dex=?,Cha=?,Intel=?,Wis=?,Status=?,Class=?,Sex=?,Type=?,Heading=?,LocX=?,LocY=?,MapID=?,Food=?,Lawful=?,Title=?,ClanID=?,Clanname=?,ClanRank=?,BonusStatus=?,ElixirStatus=?,ElfAttr=?,PKcount=?,PkCountForElf=?,ExpRes=?,PartnerID=?,AccessLevel=?,OnlineStatus=?,HomeTownID=?,Contribution=?,HellTime=?,Banned=?,Karma=?,LastPk=?,LastPkForElf=?,DeleteTime=?, LastActive=?, EinhasadPoint=? WHERE objid=?");
+			pstm.setInt(++i, pc.getReBirth());// add 轉生次數系統 by testt
 			pstm.setInt(++i, pc.getFamePoint()); // sosodemon add 聲望系統 BY.SosoDEmoN
 			pstm.setInt(++i, pc.getLevel());
 			pstm.setInt(++i, pc.getHighLevel());
+			pstm.setInt(++i, pc.getMaxLvl());// add 最大等級 by testt
 			pstm.setInt(++i, pc.getExp());
 			pstm.setInt(++i, pc.getBaseMaxHp());
 			int hp = pc.getCurrentHp();
@@ -385,6 +423,13 @@ public class MySqlCharacterStorage implements CharacterStorage {
 			// end
 			pstm.setInt(++i, pc.getId());
 			pstm.execute();
+			// 贊助狀態更新
+			//i = 0;
+			//pstm = con.prepareStatement("UPDATE characters_support SET RemainCoin=?,first_support_reward=?,rewardStep=? ");
+			//pstm.setInt(++i, pc.getRemainCoin());
+			//pstm.setBoolean(++i, pc.isfirstSupportReward());
+			//pstm.setInt(++i, pc.getRewardStep());
+			//pstm.execute();
 			_log.finest("stored char data:" + pc.getName());
 		} catch (SQLException e) {
 			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
@@ -394,4 +439,72 @@ public class MySqlCharacterStorage implements CharacterStorage {
 		}
 	}
 
-}
+	@Override
+	public void updateSupportState(L1PcInstance pc) {
+		java.sql.Connection con = null;
+		PreparedStatement pstm = null;
+		ResultSet rs = null;
+		int remainCoin = 0;
+		int totalSupport = 0;
+		boolean firstReward = pc.isfirstSupportReward();
+		try {
+			int i = 0;
+			con = L1DatabaseFactory.getInstance().getConnection();
+			pstm = con
+					.prepareStatement("SELECT * FROM characters_support WHERE char_name=?");
+			pstm.setString(1, pc.getName());
+
+			rs = pstm.executeQuery();
+			if (rs.next()) {
+				/*
+				 * 新增贊助資料更新by testt。
+				 */
+				remainCoin = rs.getInt("RemainCoin");
+				//totalSupport = rs.getInt("totalSupport");				
+				
+				pstm = con.prepareStatement("UPDATE characters_support SET RemainCoin=?, totalSupport=?, first_support_reward=?, rewardStep=?, check_reward_step=? WHERE char_name=?");
+				if (!pc.isSpecialLogin()) {
+					pstm.setInt(++i, remainCoin - pc.getRemainCoin());
+					pc.setRemainCoin(remainCoin - pc.getRemainCoin());
+				} else {
+					pstm.setInt(++i, pc.getRemainCoin());
+				}
+				pstm.setInt(++i, pc.getTotalSupport());
+				pstm.setBoolean(++i, firstReward);
+				pstm.setInt(++i, pc.getRewardStep());
+				pstm.setInt(++i, pc.checkRewardStep());
+				pstm.setString(++i, pc.getName());
+				pstm.execute();
+						
+				
+				
+			} else if (pc.isSpecialLogin())	{
+				pstm = con.prepareStatement("INSERT INTO characters_support SET account_name=?, objid=?, char_name=?, RemainCoin=?, totalSupport=?, first_support_reward=?, rewardStep=?, check_reward_step=?");
+				pstm.setString(++i, pc.getAccountName());
+				pstm.setInt(++i, pc.getId());
+				pstm.setString(++i, pc.getName());
+				pstm.setInt(++i, pc.getRemainCoin());
+				pstm.setInt(++i, pc.getTotalSupport());
+				pstm.setBoolean(++i, firstReward);
+				pstm.setInt(++i, pc.getRewardStep());
+				pstm.setInt(++i,  pc.checkRewardStep());
+				pstm.execute();
+			}
+			
+			
+			//con = L1DatabaseFactory.getInstance().getConnection();
+			
+		}
+		catch (SQLException e) {
+			_log.warning("could not check existing charname:" + e.getMessage());
+		}
+		finally {
+			SQLUtil.close(rs);
+			SQLUtil.close(pstm);
+			SQLUtil.close(con);
+		}
+	}
+}	
+
+
+

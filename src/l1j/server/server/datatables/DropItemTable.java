@@ -94,5 +94,10 @@ public final class DropItemTable {
 		}
 		return data.dropAmount;
 	}
+	
+	//檢查資料庫中有沒有這項物品
+	public boolean checkDropItem(int itemId) {
+		return _dropItem.containsKey(itemId);
+	}
 
 }

@@ -156,6 +156,21 @@ public class L1BuffUtil {
 		pc.broadcastPacket(new S_Liquor(pc.getId(), 8)); // 人物 * 1.15
 		pc.sendPackets(new S_ServerMessage(1065)); // 將發生神秘的奇蹟力量。
 	}
+	
+	// 三段加速加入時間參數 by testt
+	public static void thirdSpeed(L1PcInstance pc, int time) {
+		if (pc.hasSkillEffect(STATUS_THIRD_SPEED)) {
+			pc.killSkillEffectTimer(STATUS_THIRD_SPEED);
+		}
+
+		pc.setSkillEffect(STATUS_THIRD_SPEED, time * 1000);
+
+		pc.sendPackets(new S_SkillSound(pc.getId(), 8031));
+		pc.broadcastPacket(new S_SkillSound(pc.getId(), 8031));
+		pc.sendPackets(new S_Liquor(pc.getId(), 8)); // 人物 * 1.15
+		pc.broadcastPacket(new S_Liquor(pc.getId(), 8)); // 人物 * 1.15
+		pc.sendPackets(new S_ServerMessage(1065)); // 將發生神秘的奇蹟力量。
+	}
 
 	public static void bloodstain(L1PcInstance pc, byte type, int time,
 			boolean showGfx) {
@@ -430,6 +445,11 @@ public class L1BuffUtil {
 					break;
 				}
 			}
+			//使用持有武器判斷是否能使用三重矢by testt
+			if (_player.getWeapon().getItem().getType1()==20){
+				gfxcheck = true;
+			}
+			
 			if (!gfxcheck) {
 				return 0;
 			}

@@ -36,7 +36,6 @@ public class L1Who implements L1CommandExecutor {
 			String amount = String.valueOf(players.size());
 			S_WhoAmount s_whoamount = new S_WhoAmount(amount);
 			pc.sendPackets(s_whoamount);
-
 			// オンラインのプレイヤーリストを表示
 			if (arg.equalsIgnoreCase("all")) {
 				pc.sendPackets(new S_SystemMessage("-- 線上玩家 --"));

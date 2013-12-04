@@ -1,0 +1,92 @@
+/**
+ *                            License
+ * THE WORK (AS DEFINED BELOW) IS PROVIDED UNDER THE TERMS OF THIS  
+ * CREATIVE COMMONS PUBLIC LICENSE ("CCPL" OR "LICENSE"). 
+ * THE WORK IS PROTECTED BY COPYRIGHT AND/OR OTHER APPLICABLE LAW.  
+ * ANY USE OF THE WORK OTHER THAN AS AUTHORIZED UNDER THIS LICENSE OR  
+ * COPYRIGHT LAW IS PROHIBITED.
+ * 
+ * BY EXERCISING ANY RIGHTS TO THE WORK PROVIDED HERE, YOU ACCEPT AND  
+ * AGREE TO BE BOUND BY THE TERMS OF THIS LICENSE. TO THE EXTENT THIS LICENSE  
+ * MAY BE CONSIDERED TO BE A CONTRACT, THE LICENSOR GRANTS YOU THE RIGHTS CONTAINED 
+ * HERE IN CONSIDERATION OF YOUR ACCEPTANCE OF SUCH TERMS AND CONDITIONS.
+ * 
+ */
+package l1j.server.server.model.Instance;
+
+import static l1j.server.server.model.skill.L1SkillId.FOG_OF_SLEEPING;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Timer;
+
+import l1j.server.server.ActionCodes;
+import l1j.server.server.IdFactory;
+import l1j.server.server.datatables.ExpTable;
+import l1j.server.server.datatables.WeaponSoulTable;
+import l1j.server.server.model.L1Attack;
+import l1j.server.server.model.L1Character;
+import l1j.server.server.model.L1Inventory;
+import l1j.server.server.model.L1Object;
+import l1j.server.server.model.L1PetFood;
+import l1j.server.server.model.L1World;
+import l1j.server.server.serverpackets.S_DoActionGFX;
+import l1j.server.server.serverpackets.S_HPMeter;
+import l1j.server.server.serverpackets.S_NpcChatPacket;
+import l1j.server.server.serverpackets.S_PetCtrlMenu;
+import l1j.server.server.serverpackets.S_PetMenuPacket;
+import l1j.server.server.serverpackets.S_PetPack;
+import l1j.server.server.serverpackets.S_ServerMessage;
+import l1j.server.server.serverpackets.S_SkillSound;
+import l1j.server.server.serverpackets.S_SummonPack;
+import l1j.server.server.templates.L1Npc;
+import l1j.server.server.templates.L1WeaponSoul;
+import l1j.server.server.templates.L1PetItem;
+import l1j.server.server.templates.L1PetType;
+import l1j.server.server.utils.Random;
+
+public class L1WeaponSoulInstance extends L1NpcInstance {
+
+
+public L1WeaponSoulInstance(L1Npc template, L1PcInstance master, L1WeaponSoul l1WeaponSoul) {
+		super(template);
+
+		_WeaponSoulMaster = master;
+		_itemObjId = l1WeaponSoul.get_itemobjid();
+		_type = WeaponSoulTable.getInstance().;
+
+		// ステータスを上書き
+		setId(l1pet.get_objid());
+		setName(l1pet.get_name());
+		setLevel(l1pet.get_level());
+		// HPMPはMAXとする
+		setMaxHp(l1pet.get_hp());
+		setCurrentHpDirect(l1pet.get_hp());
+		setMaxMp(l1pet.get_mp());
+		setCurrentMpDirect(l1pet.get_mp());
+		setExp(l1pet.get_exp());
+		setExpPercent(ExpTable.getExpPercentage(l1pet.get_level(),
+				l1pet.get_exp()));
+		setLawful(l1pet.get_lawful());
+		setTempLawful(l1pet.get_lawful());
+		set_food(l1pet.get_food());
+		// 執行飽食度計時器
+		startFoodTimer(this);
+
+		setMaster(master);
+		setX(master.getX() + Random.nextInt(5) - 2);
+		setY(master.getY() + Random.nextInt(5) - 2);
+		setMap(master.getMapId());
+		setHeading(5);
+		setLightSize(template.getLightSize());
+
+		_currentPetStatus = 3;
+
+		L1World.getInstance().storeObject(this);
+		L1World.getInstance().addVisibleObject(this);
+		for (L1PcInstance pc : L1World.getInstance().getRecognizePlayer(this)) {
+			onPerceive(pc);
+		}
+		master.addPet(this);
+	}
+}

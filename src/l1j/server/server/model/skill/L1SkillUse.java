@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import l1j.server.Config;
 import l1j.server.server.ActionCodes;
 import l1j.server.server.datatables.PolyTable;
 import l1j.server.server.datatables.SkillsTable;
@@ -67,6 +68,7 @@ import l1j.server.server.serverpackets.S_OwnCharStatus;
 import l1j.server.server.serverpackets.S_Paralysis;
 import l1j.server.server.serverpackets.S_Poison;
 import l1j.server.server.serverpackets.S_RangeSkill;
+import l1j.server.server.serverpackets.S_RemoveObject;
 import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.serverpackets.S_SkillBrave;
 import l1j.server.server.serverpackets.S_SkillHaste;
@@ -81,7 +83,6 @@ import l1j.server.server.serverpackets.S_Strup;
 import l1j.server.server.serverpackets.S_TrueTarget;
 import l1j.server.server.serverpackets.S_UseAttackSkill;
 import l1j.server.server.templates.L1BookMark;
-
 import l1j.server.server.templates.L1Skills;
 import l1j.server.server.utils.Random;
 import l1j.server.server.utils.collections.Lists;
@@ -307,7 +308,7 @@ public class L1SkillUse {
 		else if (type == TYPE_SPELLSC) { // スペルスクロール使用時
 			checkedResult = isSpellScrollUsable();
 		}
-		else if (type == TYPE_NPCBUFF) {
+		else if ((type == TYPE_NPCBUFF) || (type == TYPE_GMBUFF)) {//增加gmbuff的CHECK
 			checkedResult = true;
 		}
 		if (!checkedResult) {
@@ -716,6 +717,16 @@ public class L1SkillUse {
 					}
 				}
 			}
+			//無向範圍魔法可以在戰鬥區域對不同血盟產生殺傷力by testt
+			if (_skill.getTarget().equals("none") && _skill.getType() == L1Skills.TYPE_ATTACK && cha.getZoneType()==-1) {
+				if ((_player.getMapId() < 5153 || _player.getMapId() > 5164) || _player.getDeathId() == cha.getDeathId()) {
+					//在死亡戰場中同血盟也會被範圍攻擊傷害
+					if ((_player.getClanid() != enemy.getClanid()) || _player.getDeathId() != 0 || (enemy.getClanid() == 0))
+						return true;
+				}
+				
+			}
+			//無向範圍魔法可以在戰鬥區域對不同血盟產生殺傷力 end by testt
 			return false; // 攻撃スキルでPKモードじゃない場合
 		}
 
@@ -1431,12 +1442,12 @@ public class L1SkillUse {
 					}
 					_player.sendPackets(new S_RangeSkill(_player, cha, _gfxid, _actid, S_RangeSkill.TYPE_DIR));
 					_player.broadcastPacket(new S_RangeSkill(_player, cha, _gfxid, _actid, S_RangeSkill.TYPE_DIR));
-				}
+					}					
 			}
 			else if (_skill.getTarget().equals("none") && (_skill.getType() == L1Skills.TYPE_ATTACK)) { // 無方向範囲攻撃魔法
 				L1Character[] cha = new L1Character[_targetList.size()];
 				int i = 0;
-				for (TargetStatus ts : _targetList) {
+				for (TargetStatus ts : _targetList) {					
 					cha[i] = ts.getTarget();
 					cha[i].broadcastPacketExceptTargetSight(new S_DoActionGFX(cha[i].getId(), ActionCodes.ACTION_Damage), _player);
 					i++;
@@ -1719,6 +1730,7 @@ public class L1SkillUse {
 						iter.remove();
 						continue;
 					}
+					//System.out.println("顆顆，他是魔法攻擊歐");
 					dmg = _magic.calcMagicDamage(_skillId);
 					_dmg = dmg;
 					cha.removeSkillEffect(ERASE_MAGIC); // イレースマジック中なら、攻撃魔法で解除

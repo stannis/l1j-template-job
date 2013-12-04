@@ -338,22 +338,28 @@ public class L1MagicDoll {
 
 	// TODO 經驗加倍魔法娃娃
 	public static double getDoubleExpByDoll(L1Character _master) {
+		int origenalExp = 100;
 		int DoubleExp = 100;
 		int chance = Random.nextInt(100) + 1;
 		for ( L1DollInstance dollIns : _master.getDollList().values()) {
 			L1MagicDoll doll = MagicDollTable.getInstance().getTemplate(dollIns.getItemId());
 			if (doll != null) {
 				if(doll.getExpRateChance() > 0 && doll.getExpRate() > 100){
+					chance = Random.nextInt(100) + 1;// 重新擲骰子 by testt
 					if (doll.getExpRateChance() >= chance) {
 						DoubleExp = doll.getExpRate();
 						if (_master instanceof L1PcInstance) {
 							L1PcInstance pc = (L1PcInstance) _master;
-							pc.sendPackets(new S_ServerMessage(166, "經驗值加成 " + ((double)DoubleExp / 100) + " 倍")); 
 							pc.sendPackets(new S_SkillSound(_master.getId(),4399));
+							origenalExp *= ((double)DoubleExp / 100);// 每次發動成功就乘以經驗倍率 by testt
 						}
 					}
 				}
 			}
+		}
+		if (_master instanceof L1PcInstance && DoubleExp > 100) {
+			L1PcInstance pc = (L1PcInstance) _master;		
+			pc.sendPackets(new S_ServerMessage(166, "經驗值加成 " + ((double)DoubleExp / 100) + " 倍")); 
 		}
 		return ((double)DoubleExp / 100);
 	}

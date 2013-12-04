@@ -34,6 +34,7 @@ import l1j.server.server.datatables.SkillsTable;
 import l1j.server.server.datatables.WeaponSoulTable;
 import l1j.server.server.model.Instance.L1ItemInstance;
 import l1j.server.server.model.Instance.L1PcInstance;
+import l1j.server.server.model.item.action.Effect;
 import l1j.server.server.serverpackets.S_Ability;
 import l1j.server.server.serverpackets.S_AddSkill;
 import l1j.server.server.serverpackets.S_DelSkill;
@@ -89,6 +90,11 @@ public class L1EquipmentSlot {
 			_owner.addAc(item.get_ac() - armor.getEnchantLevel()
 					- armor.getAcByMagic());
 		}
+		// add 防具階級近戰修正 by testt
+		if (armor.getItem().getType() < 8) {
+			_owner.addShortStepFix(armor.getStepLevel() * armor.getItemLevel());
+		}
+		// end
 		_owner.addDamageReductionByArmor(item.getDamageReduction());
 		_owner.addWeightReduction(item.getWeightReduction());
 		_owner.addHitModifierByArmor(item.getHitModifierByArmor());
@@ -172,6 +178,11 @@ public class L1EquipmentSlot {
 			_owner.addAc(-(item.get_ac() - armor.getEnchantLevel() - armor
 					.getAcByMagic()));
 		}
+		// add 防具階級近戰修正 by testt
+		if (armor.getItem().getType() < 8) {
+			_owner.addShortStepFix(-(armor.getStepLevel() * armor.getItemLevel()));
+		}
+		// end
 		_owner.addDamageReductionByArmor(-item.getDamageReduction());
 		_owner.addWeightReduction(-item.getWeightReduction());
 		_owner.addHitModifierByArmor(-item.getHitModifierByArmor());
@@ -276,6 +287,14 @@ public class L1EquipmentSlot {
 			}
 		}
 		_owner.getEquipSlot().setMagicHelm(equipment);
+		// 增加裝備延遲中斷，避免玩家不斷穿脫裝備增加伺服器負擔 by testt
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		//end
 		if (item.getType2() == 1) {
 			setWeapon(equipment);
 		} else if (item.getType2() == 2) {
@@ -285,8 +304,15 @@ public class L1EquipmentSlot {
 				for (L1WeaponSoul wss : WeaponSoulTable.getNewInstance().getWeaponSoullList().values()) {
 					if (wss.get_itemobjid() == equipment.getId()) {
 						// 武魂已在清單中
+						try {
+							Thread.sleep(0);//避免重複占用執行緒
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						chklist=true;
 						ws =  wss;
+						break;
 					}
 					//System.out.println(wss.get_itemobjid());
 				}					
@@ -316,7 +342,25 @@ public class L1EquipmentSlot {
 					_owner.broadcastPacket(new S_SkillSound(_owner.getId(), 4661));
 					WeaponSoulTable.getInstance().storeNewWeaponSoul(_owner, equipment.getItemId(), equipment.getId());
 				}
+			} else if (item.getType() == 14) {//輔助裝備(右邊) by testt
+				int effectId = item.getItemId() - 296006;
+				int gfxId = item.getItemId() - 292706;
+				switch (effectId) {
+				case 4001:
+				case 4002:
+				case 4003:
+				case 4004:
+					Effect.deleteRepeatedSkills(_owner, effectId);
+					_owner.setSkillEffect(effectId, 0);
+					_owner.sendPackets(new S_ServerMessage(1292));
+					_owner.sendPackets(new S_SkillSound(_owner.getId(), gfxId));
+					_owner.broadcastPacket(new S_SkillSound(_owner.getId(), gfxId));
+					break;
+				default:
+					break;
+				}
 			}
+				
 			setArmor(equipment);
 			_owner.sendPackets(new S_SPMR(_owner));
 		}
@@ -374,8 +418,25 @@ public class L1EquipmentSlot {
 			}
 		}
 		_owner.getEquipSlot().removeMagicHelm(_owner.getId(), equipment);
+		//武魂及經驗符石脫下的處理by testt
 		_owner.setCurrentRune(0);
-
+		if (item.getType() == 14) {//輔助裝備(右邊) by testt
+			int effectId = item.getItemId() - 296006;
+			switch (effectId) {
+			case 4001:
+			case 4002:
+			case 4003:
+			case 4004:
+				_owner.removeSkillEffect(effectId);
+				_owner.sendPackets(new S_ServerMessage(166, "狩獵經驗回復到原始狀態"));
+				break;
+			default:
+				break;
+			}
+		}
+		//end
+		
+		
 		if (item.getType2() == 1) {
 			removeWeapon(equipment);
 		} else if (item.getType2() == 2) {

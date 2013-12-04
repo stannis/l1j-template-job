@@ -70,7 +70,7 @@ import l1j.server.server.serverpackets.S_SkillSound;
 import l1j.server.server.templates.L1Npc;
 import l1j.server.server.templates.L1NpcChat;
 import l1j.server.server.types.Point;
-import l1j.server.server.utils.Random;
+import l1j.server.server.utils.random.Random;
 import l1j.server.server.utils.TimerPool;
 import l1j.server.server.utils.collections.Lists;
 import l1j.server.server.utils.collections.Maps;
@@ -355,7 +355,10 @@ public class L1NpcInstance extends L1Character {
 			}
 			if (!_hateList.isEmpty()) {
 				_target = _hateList.getMaxHateCharacter();
-				checkTarget();
+				//死亡角色不移除仇恨清單，並且找出存活角色的最大仇恨者by testt
+				if (_target != null) {
+					checkTarget();
+				}
 			}
 		}
 	}
@@ -750,7 +753,10 @@ public class L1NpcInstance extends L1Character {
 		if (_target == null) {
 			return;
 		}
-		_hateList.remove(_target);
+		//死亡角色不移除仇恨清單，並且找出存活角色的最大仇恨者by testt
+		if (!_target.isDead()){
+			_hateList.remove(_target);
+		}		
 		_target = null;
 	}
 
@@ -1109,16 +1115,72 @@ public class L1NpcInstance extends L1Character {
 		int randomlevel = 0;
 		double rate = 0;
 		double diff = 0;
-		setName(template.get_name());
-		setNameId(template.get_nameid());
+		short templvl = 0;
+		boolean btemp[] = new boolean [3];
+		btemp [0] = template.is_agro();
+		btemp [1] = template.is_agrocoi();
+		btemp [2] = template.is_agrososc();
+		//setName(template.get_name());
+		//setNameId(template.get_nameid());
+		// 攻擊
+		if (template.get_atkspeed() != 0) {
+			int actid = (getStatus() + 1);
+			if (L1NpcDefaultAction.getInstance().getDefaultAttack(getTempCharGfx()) != actid) {
+				actid = L1NpcDefaultAction.getInstance().getDefaultAttack(getTempCharGfx());
+			}
+			setAtkspeed(SprTable.getInstance().getSprSpeed(getTempCharGfx(), actid));
+		} else {
+			setAtkspeed(0);
+		}
+		//傲慢71樓以上，等級經驗額外處理 ，並且一般怪物有1%機會異變by testt
+		if (template.getMapId() != 0) {
+			if ((template.getMapId() >= 171 && template.getMapId() <= 200)
+					|| ((Random.nextInt(100)+1) <= 1)) {
+				//System.out.println((Random.nextInt(100)+1));
+				if (getAtkspeed() > 0 
+						&& template.get_randomlevel() == 0 ) {//會攻擊的怪物及本來非異變的怪物才會異變
+					templvl = (short)template.get_level();//儲存原來的等級
+					template.set_level(30);
+					template.set_randomlevel(99);
+					template.set_randomhp(9900);
+					template.set_randommp(1100);
+					template.set_randomac(-80);
+					template.set_randomexp(9900);
+					template.set_randomlawful(-1500);
+					template.set_damagereduction(Random.nextInt(31));
+					//在傲慢以外的怪物只要異變都變為被動及不幫忙種族
+					if (template.getMapId() < 171 || template.getMapId() > 200) {
+						template.set_agro(false);
+						template.set_agrocoi(false);
+						template.set_agrososc(false);
+					}
+				}
+			}
+		}
 		if (template.get_randomlevel() == 0) { // ランダムLv指定なし
 			setLevel(template.get_level());
+			//新增名稱變襪 by testt
+			setName(template.get_name());
+			setNameId(template.get_nameid());
 		} else { // ランダムLv指定あり（最小値:get_level(),最大値:get_randomlevel()）
 			randomlevel = Random.nextInt(template.get_randomlevel()
 					- template.get_level() + 1);
 			diff = template.get_randomlevel() - template.get_level();
+			//傲慢71樓以上及異變的怪物，等級從51開始起跳 by testt
+			if (template.getMapId() >= 171 && template.getMapId() <= 200) {
+				randomlevel = Random.nextInt(template.get_randomlevel()
+						- template.get_level() - 20) + 21;
+			} else {
+				//非傲慢71以上怪物異變，等集郵51起跳，最大59級
+				if (template.get_randomlevel() == 99) {
+					randomlevel = Random.nextInt(template.get_randomlevel()
+							- template.get_level() - 60) + 21;
+				}
+			}
 			rate = randomlevel / diff;
 			randomlevel += template.get_level();
+			setName("異變的 " + template.get_name());
+			setNameId("異變的 " + template.get_nameid());
 			setLevel(randomlevel);
 		}
 		if (template.get_randomhp() == 0) {
@@ -1148,6 +1210,24 @@ public class L1NpcInstance extends L1Character {
 					* (template.get_randomac() - template.get_ac());
 			int ac = (int) (template.get_ac() + randomac);
 			setAc(ac);
+			// ADD 怪物防禦修正模組 by testt
+			double temp = 0;
+			if (randomlevel >= 50 && randomlevel < 60) {
+				//相當於穿上C級全套防具，最高穿到Lv4
+				temp = (1 + ((randomlevel - 50) / 2)) * 7 * 0.01;
+			} else if (randomlevel >= 60 && randomlevel < 70) {
+				//相當於穿上B級全套防具，最高穿到Lv4
+				temp = (1 + ((randomlevel - 60) / 2)) * 7 * 0.02;				
+			} else if (randomlevel >= 70 && randomlevel < 70) {
+				//相當於穿上A級全套防具，最高穿到Lv4
+				temp = (1 + ((randomlevel - 70) / 2)) * 7 * 0.03;				
+			} else if (randomlevel >= 80) {
+				//相當於穿上S級全套防具，最高穿到Lv6
+				temp = (1 + ((randomlevel - 80) / 3)) * 7 * 0.04;
+				if (temp > 1.68)
+					temp = 1.68;
+			}
+			setShortStepFix(temp);
 		}
 		if (template.get_randomlevel() == 0) {
 			setStr(template.get_str());
@@ -1157,16 +1237,26 @@ public class L1NpcInstance extends L1Character {
 			setWis(template.get_wis());
 			setMr(template.get_mr());
 		} else {
-			setStr((byte) Math.min(template.get_str() + diff, 127));
-			setCon((byte) Math.min(template.get_con() + diff, 127));
-			setDex((byte) Math.min(template.get_dex() + diff, 127));
-			setInt((byte) Math.min(template.get_int() + diff, 127));
-			setWis((byte) Math.min(template.get_wis() + diff, 127));
-			setMr((byte) Math.min(template.get_mr() + diff, 127));
+			//setStr((byte) Math.min(template.get_str() + diff, 127));
+			//setCon((byte) Math.min(template.get_con() + diff, 127));
+			//setDex((byte) Math.min(template.get_dex() + diff, 127));
+			//setInt((byte) Math.min(template.get_int() + diff, 127));
+			//setWis((byte) Math.min(template.get_wis() + diff, 127));
+			//setMr((byte) Math.min(template.get_mr() + diff, 127));
 
-			addHitup((int) diff * 2);
-			addDmgup((int) diff * 2);
+			//addHitup((int) diff * 2);
+			//addDmgup((int) diff * 2);
+			setStr((byte) Math.min(template.get_str() + randomlevel, 127));
+			setCon((byte) Math.min(template.get_con() + randomlevel, 127));
+			setDex((byte) Math.min(template.get_dex() + randomlevel, 127));
+			setInt((byte) Math.min(template.get_int() + randomlevel, 127));
+			setWis((byte) Math.min(template.get_wis() + randomlevel, 127));
+			setMr((byte) Math.min(template.get_mr() + randomlevel, 127));
+
+			addHitup((int) (randomlevel * 0.4));
+			addDmgup((int) (randomlevel * 1));
 		}
+		
 		setAgro(template.is_agro());
 		setAgrocoi(template.is_agrocoi());
 		setAgrososc(template.is_agrososc());
@@ -1182,16 +1272,7 @@ public class L1NpcInstance extends L1Character {
 		} else {
 			setPassispeed(0);
 		}
-		// 攻擊
-		if (template.get_atkspeed() != 0) {
-			int actid = (getStatus() + 1);
-			if (L1NpcDefaultAction.getInstance().getDefaultAttack(getTempCharGfx()) != actid) {
-				actid = L1NpcDefaultAction.getInstance().getDefaultAttack(getTempCharGfx());
-			}
-			setAtkspeed(SprTable.getInstance().getSprSpeed(getTempCharGfx(), actid));
-		} else {
-			setAtkspeed(0);
-		}
+		
 
 		if (template.get_randomexp() == 0) {
 			setExp(template.get_exp());
@@ -1223,6 +1304,20 @@ public class L1NpcInstance extends L1Character {
 		setKarma(template.getKarma());
 		setLightSize(template.getLightSize());
 
+		//將更改的數值初始化by testt
+		template.set_level((int)templvl);
+		template.set_randomlevel(0);
+		template.set_randomhp(0);
+		template.set_randommp(0);
+		template.set_randomac(0);
+		template.set_randomexp(0);
+		template.set_randomlawful(0);
+		template.set_damagereduction(0);
+		template.set_agro(btemp [0]);
+		template.set_agrocoi(btemp [1]);
+		template.set_agrososc(btemp [2]);
+		//end
+		
 		mobSkill = new L1MobSkillUse(this);
 	}
 
@@ -2438,5 +2533,17 @@ public class L1NpcInstance extends L1Character {
 	public void setPolyArrowGfx(int i) {
 		_polyArrowGfx = i;
 	}
+
+	// ADD 怪物防禦修正模組 by testt
+	private double _shortStepFix;
+	
+	public void setShortStepFix(double temp) {
+		_shortStepFix = temp;
+	}
+	
+	public double getShortStepFix() {		
+		return _shortStepFix;
+	}
+	// END
 
 }

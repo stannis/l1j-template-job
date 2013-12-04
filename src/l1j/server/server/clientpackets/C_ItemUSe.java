@@ -30,6 +30,7 @@ import static l1j.server.server.model.skill.L1SkillId.SECRET_MEDICINE_OF_DESTRUC
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -105,6 +106,7 @@ import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.serverpackets.S_ShowPolyList;
 import l1j.server.server.serverpackets.S_SkillSound;
 import l1j.server.server.serverpackets.S_Sound;
+import l1j.server.server.serverpackets.S_SystemMessage;
 import l1j.server.server.serverpackets.S_UseAttackSkill;
 import l1j.server.server.serverpackets.S_UseMap;
 import l1j.server.server.storage.CharactersItemStorage;
@@ -291,6 +293,29 @@ public class C_ItemUSe extends ClientBasePacket {
 		case 49198:
 		case 49199:
 		case 60014: // 物品過濾器
+		case 60028:// 祝福防捲(不可轉移)by testt
+		case 60029:// 祝福武捲(不可轉移)by testt
+		case 60030:// 防捲(不可轉移)by testt
+		case 60031:// 武捲(不可轉移)by testt
+		case 61018: // 升級石擷取器
+		case 61019: // 煉金術
+		case 60051:// C級專屬防具賦予卷軸
+		case 60052:// B級專屬防具賦予卷軸
+		case 60053:// A級專屬防具賦予卷軸
+		case 60054:// S級專屬防具賦予卷軸
+		case 60055:// C級專屬武器賦予卷軸
+		case 60056:// B級專屬武器賦予卷軸
+		case 60057:// A級專屬武器賦予卷軸
+		case 60058:// S級專屬武器賦予卷軸
+		case 61001:// 武器升級石bytestt
+		case 61002:// 武器升級石
+		case 61003:// 武器升級石
+		case 61004:// 武器升級石
+		case 61005:// 武器升級石
+		case 61006:// 武器升級石
+		case 61007:// 武器升級石
+		case 61008:// 武器升級石
+		case 61009:	// 武器升級石
 			l = readD();
 			break;
 		case 140100:
@@ -387,8 +412,15 @@ public class C_ItemUSe extends ClientBasePacket {
 					|| (itemId == 40130) || (itemId == 140130)
 					|| (itemId == L1ItemId.B_SCROLL_OF_ENCHANT_WEAPON)
 					|| (itemId == L1ItemId.C_SCROLL_OF_ENCHANT_WEAPON)
-					|| (itemId == 40128)) { // 對武器施法的卷軸
+					|| (itemId == 40128)
+					|| (itemId == 60029) || (itemId == 60031)) { // 對武器施法的卷軸
 				Enchant.scrollOfEnchantWeapon(pc, l1iteminstance,
+						l1iteminstance1, client);
+			} else if (itemId >= 61001 && itemId <= 61009) { // 升級石by testt
+				Enchant.scrollOfEnchantItemLevel(pc, l1iteminstance,
+						l1iteminstance1, client);
+			} else if (itemId >= 60051 && itemId <= 60058) { // 專屬裝備賦予卷軸by testt
+				Enchant.scrollOfEnchantStepLevel(pc, l1iteminstance,
 						l1iteminstance1, client);
 			} else if (itemId == 49312) { // 象牙塔對武器施法的卷軸
 				Enchant.scrollOfEnchantWeaponIvoryTower(pc, l1iteminstance,
@@ -402,7 +434,8 @@ public class C_ItemUSe extends ClientBasePacket {
 					|| (itemId == 40129) || (itemId == 140129)
 					|| (itemId == L1ItemId.B_SCROLL_OF_ENCHANT_ARMOR)
 					|| (itemId == L1ItemId.C_SCROLL_OF_ENCHANT_ARMOR)
-					|| (itemId == 40127)) { // 對盔甲施法的卷軸
+					|| (itemId == 40127) || (itemId == 60028)
+					|| (itemId == 60030)) { // 對盔甲施法的卷軸
 				Enchant.scrollOfEnchantArmor(pc, l1iteminstance,
 						l1iteminstance1, client);
 			} else if (itemId == 49311) { // 象牙塔對盔甲施法的卷軸
@@ -516,10 +549,73 @@ public class C_ItemUSe extends ClientBasePacket {
 						}
 					}
 					pc.getInventory().removeItem(l1iteminstance, 1);
-				} else if (itemId == 43000) { // 復活のポーション（Lv99キャラのみが使用可能/Lv1に戻る効果）
+				} else if (itemId == 43000) { // 返生藥水
 					pc.setExp(1);
 					pc.resetLevel();
 					pc.setBonusStats(0);
+					short newHp = (short) (pc.getMaxHp() * 0.3);
+					short newMp = (short) (pc.getMaxMp() * 0.3);
+					pc.setBaseMaxHp(newHp);
+					pc.setBaseMaxMp(newMp);
+					pc.setMaxHp(newHp);
+					pc.setMaxMp(newMp);
+					pc.setReBirth(pc.getReBirth() + 1);
+					pc.setHighLevel(0);
+					pc.getQuest().set_step(306, 0);// 重置賺升任務
+					L1ItemInstance item = ItemTable.getInstance().createItem(
+							61000);
+					item.setCount(1);
+					if (item != null) {
+						if (pc.getInventory().checkAddItem(item, 1) == L1Inventory.OK) {
+							pc.getInventory().storeItem(item);
+						} else { // 持てない場合は地面に落とす 處理のキャンセルはしない（不正防止）
+							L1World.getInstance()
+							.getInventory(pc.getX(), pc.getY(),
+									pc.getMapId()).storeItem(item);
+						}
+						pc.sendPackets(new S_ServerMessage(403, item
+								.getLogName())); 
+					}
+					pc.getInventory().takeoffEquip(29);// 脫下全部裝備
+					pc.sendPackets(new S_ServerMessage(166, "身上的裝備被強制卸除"));
+					pc.sendPackets(new S_SkillSound(pcObjid, 191));
+					pc.broadcastPacket(new S_SkillSound(pcObjid, 191));
+					pc.sendPackets(new S_OwnCharStatus(pc));
+					pc.getInventory().removeItem(l1iteminstance, 1);
+					pc.sendPackets(new S_ServerMessage(822)); // 独自アイテムですので、メッセージは適当です。
+					pc.save(); // DBにキャラクター情報を書き込む
+
+					// 處理新手保護系統(遭遇的守護)狀態資料的變動
+					pc.checkNoviceType();
+				} else if (itemId == 43001) { //高級返生藥水
+					pc.setExp(1);
+					pc.resetLevel();
+					pc.setBonusStats(0);
+					short newHp = (short) (pc.getMaxHp() * 0.5);
+					short newMp = (short) (pc.getMaxMp() * 0.5);
+					pc.setBaseMaxHp(newHp);
+					pc.setBaseMaxMp(newMp);
+					pc.setMaxHp(newHp);
+					pc.setMaxMp(newMp);
+					pc.setReBirth(pc.getReBirth() + 1);
+					pc.setHighLevel(0);
+					pc.getQuest().set_step(306, 0);// 重置賺升任務
+					L1ItemInstance item = ItemTable.getInstance().createItem(
+							61003);
+					item.setCount(1);
+					if (item != null) {
+						if (pc.getInventory().checkAddItem(item, 1) == L1Inventory.OK) {
+							pc.getInventory().storeItem(item);
+						} else { // 持てない場合は地面に落とす 處理のキャンセルはしない（不正防止）
+							L1World.getInstance()
+							.getInventory(pc.getX(), pc.getY(),
+									pc.getMapId()).storeItem(item);
+						}
+						pc.sendPackets(new S_ServerMessage(403, item
+								.getLogName())); 
+					}
+					pc.getInventory().takeoffEquip(29);// 脫下全部裝備
+					pc.sendPackets(new S_ServerMessage(166, "身上的裝備被強制卸除"));
 					pc.sendPackets(new S_SkillSound(pcObjid, 191));
 					pc.broadcastPacket(new S_SkillSound(pcObjid, 191));
 					pc.sendPackets(new S_OwnCharStatus(pc));
@@ -2177,6 +2273,8 @@ public class C_ItemUSe extends ClientBasePacket {
 					}
 				} else if ((itemId >= 40289) && (itemId <= 40297)) { // 傲慢の塔11~91階テレポートアミュレット
 					useToiTeleportAmulet(pc, itemId, l1iteminstance);
+				} else if (itemId == 60050) { // 自製地圖傳送符 by testt
+					useToiTeleportAmulet(pc, itemId, l1iteminstance);
 				} else if ((itemId >= 40280) && (itemId <= 40288)) {
 					// 封印された傲慢の塔11～91階テレポートアミュレット
 					pc.getInventory().removeItem(l1iteminstance, 1);
@@ -3011,6 +3109,12 @@ public class C_ItemUSe extends ClientBasePacket {
 				} else if (itemId == 60017){ // 武魂契約書
 					WeaponSoulTable.getNewInstance().getStr1(pc, pc.getCurrentRune());
 					//pc.getCurrentRune();
+				} else if (itemId == 61018 || itemId == 61019){ // 升級石擷取器、煉金術by testt
+					FilterItem.useFilterItem(pc, l1iteminstance1, l1iteminstance, client);
+				} else if (itemId == 60023){ // C級武器兌換卷by testt
+					FilterItem.useFilterItemCleaner(pc, l1iteminstance);
+				} else if (itemId == 43002){ // 轉生卷軸by testt
+					FilterItem.useFilterItemCleaner(pc, l1iteminstance);
 				} else if (itemId == 40075) { // 毀滅盔甲的卷軸
 					if (l1iteminstance1.getItem().getType2() == 2) {
 						int msg = 0;
@@ -5271,7 +5375,7 @@ public class C_ItemUSe extends ClientBasePacket {
 
 	private void useToiTeleportAmulet(L1PcInstance pc, int itemId,
 			L1ItemInstance item) {
-		boolean isTeleport = false;
+		boolean isTeleport = true;//fix by testt
 		if ((itemId == 40289) || (itemId == 40293)) { // 11,51Famulet
 			if ((pc.getX() >= 32816) && (pc.getX() <= 32821)
 					&& (pc.getY() >= 32778) && (pc.getY() <= 32783)

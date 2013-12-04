@@ -19,6 +19,7 @@ import l1j.server.server.ClientThread;
 import l1j.server.server.datatables.ShopTable;
 import l1j.server.server.model.L1World;
 import l1j.server.server.model.Instance.L1PcInstance;
+import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.serverpackets.S_WhoAmount;
 import l1j.server.server.serverpackets.S_WhoCharinfo;
 import l1j.server.server.serverpackets.S_SystemMessage; // 玩家或GM可線上查詢伺服器設定(/who)  by andy52005 1/2
@@ -38,7 +39,6 @@ public class C_Who extends ClientBasePacket {
 
 	public C_Who(byte[] decrypt, ClientThread client) {
 		super(decrypt);
-		
 		L1PcInstance pc = client.getActiveChar();
 		if (pc == null) {
 			return;
@@ -48,6 +48,15 @@ public class C_Who extends ClientBasePacket {
 		L1PcInstance find = L1World.getInstance().getPlayer(s);
 		
 
+		//伺服器訊系開關 by testt
+		if (pc.isShowMsg()) {
+			pc.isShowMsg(false);
+			pc.sendPackets(new S_ServerMessage(166,"關閉訊息提示功能"));
+		} else {
+			pc.isShowMsg(true);
+			pc.sendPackets(new S_ServerMessage(166,"開啟訊息提示功能"));
+		}
+		
 		if (find != null) {
 			S_WhoCharinfo s_whocharinfo = new S_WhoCharinfo(find);
 			pc.sendPackets(s_whocharinfo);

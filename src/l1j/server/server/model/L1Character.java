@@ -236,7 +236,9 @@ public class L1Character extends L1Object {
 	public void broadcastPacket(ServerBasePacket packet) {
 		for (L1PcInstance pc : L1World.getInstance().getVisiblePlayer(this)) {
 			// 旅館內判斷
-			if (pc.getMapId() < 16384 || pc.getMapId() > 25088 || pc.getInnKeyId() == getInnKeyId()) 
+			if (pc.getMapId() < 16384 || pc.getMapId() > 25088 || pc.getInnKeyId() == getInnKeyId())
+			// 死亡戰場內判斷
+				if (pc.getMapId() < 5153 || pc.getMapId() > 5164 || pc.getDeathId() == getDeathId())
 				pc.sendPackets(packet);			
 		}
 	}
@@ -251,7 +253,9 @@ public class L1Character extends L1Object {
 			L1Character target) {
 		for (L1PcInstance pc : L1World.getInstance()
 				.getVisiblePlayerExceptTargetSight(this, target)) {
-			pc.sendPackets(packet);
+			// 死亡戰場內判斷
+			if (pc.getMapId() < 5153 || pc.getMapId() > 5164 || pc.getDeathId() == getDeathId())
+				pc.sendPackets(packet);		
 		}
 	}
 
@@ -268,11 +272,15 @@ public class L1Character extends L1Object {
 		for (L1PcInstance pc : L1World.getInstance().getVisiblePlayer(this)) {
 			if (isFindInvis) {
 				if (pc.hasSkillEffect(GMSTATUS_FINDINVIS)) {
-					pc.sendPackets(packet);
+					// 死亡戰場內判斷
+					if (pc.getMapId() < 5153 || pc.getMapId() > 5164 || pc.getDeathId() == getDeathId())
+						pc.sendPackets(packet);		
 				}
 			} else {
 				if (!pc.hasSkillEffect(GMSTATUS_FINDINVIS)) {
-					pc.sendPackets(packet);
+					// 死亡戰場內判斷
+					if (pc.getMapId() < 5153 || pc.getMapId() > 5164 || pc.getDeathId() == getDeathId())
+						pc.sendPackets(packet);		
 				}
 			}
 		}
@@ -1802,4 +1810,16 @@ public class L1Character extends L1Object {
 		_MobHPBar = cha;
 	}
 	// end
+	
+	// 死亡競技編號與類型
+	
+	private int _DeathId = 0;
+	
+	public int getDeathId() {
+		return _DeathId;
+	}
+	
+	public void setDeathId(int i) {
+		_DeathId = i;
+	}
 }

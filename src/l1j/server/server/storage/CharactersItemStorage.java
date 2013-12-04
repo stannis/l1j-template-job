@@ -39,7 +39,13 @@ public abstract class CharactersItemStorage {
 
 	public abstract void updateItemEnchantLevel(L1ItemInstance item)
 			throws Exception;
-
+	
+	public abstract void updateItemLevel(L1ItemInstance item)//武器防具等級by testt
+			throws Exception;
+	
+	public abstract void updateItemStepLevel(L1ItemInstance item)//武器防具階級by testt
+			throws Exception;
+	
 	public abstract void updateItemDurability(L1ItemInstance item)
 			throws Exception;
 
@@ -92,4 +98,8 @@ public abstract class CharactersItemStorage {
 	}
 
 	private static CharactersItemStorage _instance;
+
+
+
+
 }

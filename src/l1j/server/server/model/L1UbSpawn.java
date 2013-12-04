@@ -122,6 +122,16 @@ public class L1UbSpawn implements Comparable<L1UbSpawn> {
 
 		mob.setId(IdFactory.getInstance().nextId());
 		mob.setHeading(5);
+		//追憶之島boss固定出現在村莊內by testt
+		switch (mob.getNpcId()){
+		case 152001:
+		case 152002:
+		case 152003:
+			loc = new L1Location(32766, 32778, 701);
+			break;
+		case 152004:
+			loc = new L1Location(32768, 32786, 701);
+		}//追憶之島boss固定出現在村莊內end by testt
 		mob.setX(loc.getX());
 		mob.setHomeX(loc.getX());
 		mob.setY(loc.getY());

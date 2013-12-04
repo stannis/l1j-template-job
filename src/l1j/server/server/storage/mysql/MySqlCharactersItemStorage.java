@@ -66,6 +66,8 @@ public class MySqlCharactersItemStorage extends CharactersItemStorage {
 				item.setCount(rs.getInt("count"));
 				item.setEquipped(rs.getInt("is_equipped") != 0 ? true : false);
 				item.setEnchantLevel(rs.getInt("enchantlvl"));
+				item.setItemLevel(rs.getInt("itemlvl"));//武器防具等級by testt
+				item.setStepLevel(rs.getInt("steplvl"));//武器階級by testt
 				item.setIdentified(rs.getInt("is_id") != 0 ? true : false);
 				item.set_durability(rs.getInt("durability"));
 				item.setChargeCount(rs.getInt("charge_count"));
@@ -122,32 +124,34 @@ public class MySqlCharactersItemStorage extends CharactersItemStorage {
 		try {
 			con = L1DatabaseFactory.getInstance().getConnection();
 			pstm = con
-					.prepareStatement("INSERT INTO character_items SET id = ?, item_id = ?, char_id = ?, item_name = ?, count = ?, is_equipped = 0, enchantlvl = ?, is_id = ?, durability = ?, charge_count = ?, remaining_time = ?, last_used = ?, bless = ?, attr_enchant_kind = ?, attr_enchant_level = ?,firemr = ?,watermr = ?,earthmr = ?,windmr = ?,addsp = ?,addhp = ?,addmp = ?,hpr = ?,mpr = ?, m_def = ?, DeleteDate = ?");
+					.prepareStatement("INSERT INTO character_items SET id = ?, item_id = ?, char_id = ?, item_name = ?, count = ?, is_equipped = 0, enchantlvl = ?, itemlvl = ?, steplvl = ?, is_id = ?, durability = ?, charge_count = ?, remaining_time = ?, last_used = ?, bless = ?, attr_enchant_kind = ?, attr_enchant_level = ?,firemr = ?,watermr = ?,earthmr = ?,windmr = ?,addsp = ?,addhp = ?,addmp = ?,hpr = ?,mpr = ?, m_def = ?, DeleteDate = ?");
 			pstm.setInt(1, item.getId());
 			pstm.setInt(2, item.getItem().getItemId());
 			pstm.setInt(3, objId);
 			pstm.setString(4, item.getItem().getName());
 			pstm.setInt(5, item.getCount());
 			pstm.setInt(6, item.getEnchantLevel());
-			pstm.setInt(7, item.isIdentified() ? 1 : 0);
-			pstm.setInt(8, item.get_durability());
-			pstm.setInt(9, item.getChargeCount());
-			pstm.setInt(10, item.getRemainingTime());
-			pstm.setTimestamp(11, item.getLastUsed());
-			pstm.setInt(12, item.getBless());
-			pstm.setInt(13, item.getAttrEnchantKind());
-			pstm.setInt(14, item.getAttrEnchantLevel());
-			pstm.setInt(15, item.getFireMr());
-			pstm.setInt(16, item.getWaterMr());
-			pstm.setInt(17, item.getEarthMr());
-			pstm.setInt(18, item.getWindMr());
-			pstm.setInt(19, item.getaddSp());
-			pstm.setInt(20, item.getaddHp());
-			pstm.setInt(21, item.getaddMp());
-			pstm.setInt(22, item.getHpr());
-			pstm.setInt(23, item.getMpr());
-			pstm.setInt(24, item.getM_Def());
-			pstm.setTimestamp(25, item.getDeleteDate()); // 道具天數刪除系統
+			pstm.setInt(7, item.getItemLevel());//武器等級by testt
+			pstm.setInt(8, item.getStepLevel());//武器階級by testt
+			pstm.setInt(9, item.isIdentified() ? 1 : 0);
+			pstm.setInt(10, item.get_durability());
+			pstm.setInt(11, item.getChargeCount());
+			pstm.setInt(12, item.getRemainingTime());
+			pstm.setTimestamp(13, item.getLastUsed());
+			pstm.setInt(14, item.getBless());
+			pstm.setInt(15, item.getAttrEnchantKind());
+			pstm.setInt(16, item.getAttrEnchantLevel());
+			pstm.setInt(17, item.getFireMr());
+			pstm.setInt(18, item.getWaterMr());
+			pstm.setInt(19, item.getEarthMr());
+			pstm.setInt(20, item.getWindMr());
+			pstm.setInt(21, item.getaddSp());
+			pstm.setInt(22, item.getaddHp());
+			pstm.setInt(23, item.getaddMp());
+			pstm.setInt(24, item.getHpr());
+			pstm.setInt(25, item.getMpr());
+			pstm.setInt(26, item.getM_Def());
+			pstm.setTimestamp(27, item.getDeleteDate()); // 道具天數刪除系統
 			pstm.execute();
 
 		} catch (SQLException e) {
@@ -223,6 +227,24 @@ public class MySqlCharactersItemStorage extends CharactersItemStorage {
 				"UPDATE character_items SET enchantlvl = ? WHERE id = ?",
 				item.getEnchantLevel());
 		item.getLastStatus().updateEnchantLevel();
+	}
+	
+	/*更新武器等級 by testt */
+	@Override
+	public void updateItemLevel(L1ItemInstance item) throws Exception {
+		executeUpdate(item.getId(),
+				"UPDATE character_items SET itemlvl = ? WHERE id = ?",
+				item.getItemLevel());
+		item.getLastStatus().updateItemLevel();
+	}
+	
+	/*更新武器階級by testt */
+	@Override
+	public void updateItemStepLevel(L1ItemInstance item) throws Exception {
+		executeUpdate(item.getId(),
+				"UPDATE character_items SET steplvl = ? WHERE id = ?",
+				item.getStepLevel());
+		item.getLastStatus().updateStepLevel();
 	}
 
 	@Override

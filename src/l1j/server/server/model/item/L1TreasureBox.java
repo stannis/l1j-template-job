@@ -102,6 +102,24 @@ public class L1TreasureBox {
 		public int getEnchant() {
 			return _enchant;
 		}
+		
+		//階級道具 by testt
+		@XmlAttribute(name = "StepLvl")
+		private int _StepLvl;
+
+		public int getStepLvl() {
+			return _StepLvl;
+		}
+		//end
+		
+		//給予職業 by testt
+		@XmlAttribute(name = "ClassId")
+		private int _ClassId = 2;//王族預設為0，故預設不可為0
+
+		public int getClassId() {
+			return _ClassId;
+		}
+		//end
 	}
 
 	private static enum TYPE {
@@ -201,6 +219,7 @@ public class L1TreasureBox {
 			for (Item each : getItems()) {
 				item = ItemTable.getInstance().createItem(each.getItemId());
 				item.setEnchantLevel(each.getEnchant()); // Enchant Feature for treasure_box
+				item.setStepLevel(each.getStepLvl()); // StepLvl Feature for treasure_box
 				if (item != null) {
 					item.setCount(each.getCount());
 					// 道具天數刪除系統
@@ -212,7 +231,16 @@ public class L1TreasureBox {
 						item.setDeleteDate(deleteDay);
 					}
 					// end
-					storeItem(pc, item);
+					// 增加職業判斷 by tett
+					if (each.getClassId() == 2) {
+						storeItem(pc, item);
+					}
+					else {
+						if (each.getClassId() == pc.getClassId()) {
+							storeItem(pc, item);
+						}
+					}
+					//end
 				}
 			}
 

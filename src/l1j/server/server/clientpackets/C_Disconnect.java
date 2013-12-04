@@ -34,7 +34,7 @@ public class C_Disconnect extends ClientBasePacket {
 		if (pc != null) {
 
 			_log.fine("Disconnect from: " + pc.getName());
-
+			pc.saveInventory(); // 離線時儲存身上物品
 			if (client.getAccount() != null)
 				Account.online(client.getAccount(), false);
 

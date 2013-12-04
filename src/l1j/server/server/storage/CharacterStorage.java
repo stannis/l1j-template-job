@@ -25,4 +25,7 @@ public interface CharacterStorage {
 	public void storeCharacter(L1PcInstance pc) throws Exception;
 
 	public L1PcInstance loadCharacter(String charName) throws Exception;
+	
+	public void updateSupportState(L1PcInstance pc) throws Exception;//testt
+
 }

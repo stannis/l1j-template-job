@@ -37,7 +37,7 @@ import l1j.server.server.model.Instance.L1SummonInstance;
 import l1j.server.server.model.identity.L1ItemId;
 import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.templates.L1Drop;
-import l1j.server.server.utils.Random;
+import l1j.server.server.utils.random.Random;//testt random
 import l1j.server.server.utils.SQLUtil;
 import l1j.server.server.utils.collections.Lists;
 import l1j.server.server.utils.collections.Maps;
@@ -172,6 +172,25 @@ public class DropTable {
 			// アイテム格納
 			inventory.storeItem(item);
 		}
+		//如果怪物等級禦夠高就給升級石
+		if (npc.getLevel() > 50) {
+			double coefficient = Math.sqrt(50) / 40;
+			int m = Math.abs((50 - npc.getLevel()));
+			double hope = Math.pow(m * coefficient, 2) * 10000;
+			int rnd = Random.nextInt(1000000) + 1;
+			if (hope > rnd) {
+				rnd = Random.nextInt(100) + 1;
+				if (rnd > 50) {//有50%是1級
+					inventory.storeItem(ItemTable.getInstance().createItem(61001));
+				}
+				if (rnd > 20 && rnd <= 50) {//有30%是2級
+					inventory.storeItem(ItemTable.getInstance().createItem(61002));
+				}
+				if (rnd <= 20) {//有20%是3級
+					inventory.storeItem(ItemTable.getInstance().createItem(61003));
+				}
+			}
+		}
 	}
 
 	// ドロップを分配
@@ -218,9 +237,7 @@ public class DropTable {
 			boolean isGround = false;
 			boolean isPartyShare = false; //組隊自動分配
 			boolean isGarbage = false; // 掉落物品過濾系統 by missu0524
-			if ((item.getItem().getType2() == 0) && (item.getItem().getType() == 2)) { // light系アイテム
-				item.setNowLighting(false);
-			}
+
 
 			if (((Config.AUTO_LOOT != 0) || (itemId == L1ItemId.ADENA)) && (totalHate > 0)) { // オートルーティングかアデナで取得者がいる場合
 				randomInt = Random.nextInt(totalHate);
@@ -244,6 +261,26 @@ public class DropTable {
 							targetInventory = acquisitor.getInventory();
 							if (acquisitor instanceof L1PcInstance) {
 								player = (L1PcInstance) acquisitor;
+								//怪物有機率掉落1-3級裝備 by testt
+								if (item.getItem().getType2()!=0) {
+									int rnd = Random.nextInt(100) + 1;
+									int item_level_happenchance = 1;//掉落裝備有1%機會是有等級的
+									if (player.getInventory().checkItem(60027))
+										item.setIdentified(true);
+									if (rnd == item_level_happenchance) {
+										rnd = Random.nextInt(100) + 1;
+										if (rnd > 50) {//若掉落有等級的裝備，有50%是1級
+											item.setItemLevel(1);
+										}
+										if (rnd > 20 && rnd <= 50) {//若掉落有等級的裝備，有30%是2級
+											item.setItemLevel(2);
+										}
+										if (rnd <= 20) {//若掉落有等級的裝備，有20%是3級
+											item.setItemLevel(3);
+										}
+									}
+								}
+								//end
 								L1ItemInstance l1iteminstance = player.getInventory().findItemId(L1ItemId.ADENA); // 所持アデナをチェック
 								if ((l1iteminstance != null) && (l1iteminstance.getCount() > 2000000000)) {
 									targetInventory = L1World.getInstance().getInventory(acquisitor.getX(), acquisitor.getY(), acquisitor.getMapId()); // 持てないので足元に落とす
@@ -253,6 +290,7 @@ public class DropTable {
 								else {
 									if (player.isInParty()) { // パーティの場合
 										partyMember = player.getParty().getMembers();
+										
 										//組隊自動分配 (item.getCount() > 現場隊員人數才分配，分配後剩餘數量 otherCount 歸第一順位隊員所有(應該是殺死怪的人))
 										if (player.getPartyType() == 1) {
 											int partySize = 0;
@@ -391,6 +429,9 @@ public class DropTable {
 				continue;
 			}
 			// end
+			if ((item.getItem().getType2() == 0) && (item.getItem().getType() == 2)) { // light系アイテム
+				item.setNowLighting(false);
+			}
 			inventory.tradeItem(item, item.getCount(), targetInventory);
 		}
 		npc.turnOnOffLight();

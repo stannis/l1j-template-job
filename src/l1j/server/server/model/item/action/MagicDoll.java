@@ -36,7 +36,7 @@ public class MagicDoll {
 
 			for (L1DollInstance curdoll : pc.getDollList().values()) {
 				doll = curdoll;
-				if (doll.getItemObjId() == itemObjectId) {
+				if (doll.getItemId() == itemId) {// fix 相同娃娃無法重複召喚 by testt
 					isAppear = false;
 					break;
 				}
@@ -47,9 +47,11 @@ public class MagicDoll {
 					pc.sendPackets(new S_ServerMessage(337, "$5240")); // 魔法結晶體不足
 					return;
 				}
-				if (pc.getDollList().size() >= Config.MAX_DOLL_COUNT) {
-					pc.sendPackets(new S_ServerMessage(79)); // 沒有任何事情發生
-					return;
+				if (pc.getDollList().size() >= Config.MAX_DOLL_COUNT ) {
+					if (pc.getDollList().size() >= ((pc.getFameLevel() / 3) + 1)) {// 聲望等級每3級可以多帶一隻魔法娃娃 by testt
+						pc.sendPackets(new S_ServerMessage(79)); // 沒有任何事情發生
+						return;
+					}
 				}
 				int npcId = magic_doll.getDollId();
 

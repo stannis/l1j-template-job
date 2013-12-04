@@ -347,6 +347,7 @@ public class L1Spawn extends L1GameTimeAdapter {
 			int newlocx = getLocX();
 			int newlocy = getLocY();
 			int tryCount = 0;
+			short temp = 0;
 
 			mob = NpcTable.getInstance().newNpcInstance(_template);
 			synchronized (_mobs) {
@@ -384,7 +385,11 @@ public class L1Spawn extends L1GameTimeAdapter {
 			}
 			else {
 				mob.setMap(getMapId());
+				temp = _template.getMapId();
+				_template.setMap(getMapId());// 加入地圖控制怪物強度 by testt
 			}
+			mob.setting_template(_template);//加入地圖控制怪物強度 by testt
+			_template.setMap(temp);
 			mob.setMovementDistance(getMovementDistance());
 			mob.setRest(isRest());
 			while (tryCount <= 50) {

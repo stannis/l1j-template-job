@@ -16,7 +16,9 @@ package l1j.server.server.clientpackets;
 
 import l1j.server.server.ClientThread;
 import l1j.server.server.model.Instance.L1PcInstance;
+import l1j.server.server.model.identity.L1ItemId;
 import l1j.server.server.serverpackets.S_PrivateShop;
+import l1j.server.server.serverpackets.S_ServerMessage;
 
 // Referenced classes of package l1j.server.server.clientpackets:
 // ClientBasePacket
@@ -38,7 +40,7 @@ public class C_ShopList extends ClientBasePacket {
 
 		int type = readC();
 		int objectId = readD();
-
+		
 		pc.sendPackets(new S_PrivateShop(pc, objectId, type));
 	}
 

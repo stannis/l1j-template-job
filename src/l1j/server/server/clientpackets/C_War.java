@@ -195,7 +195,9 @@ public class C_War extends ClientBasePacket {
 				player.sendPackets(new S_ServerMessage(218, enemyClanName)); // \f1%0血盟の君主は現在ワールドに居ません。
 				return;
 			}
-
+			//testt
+			enemyLeader.setTempID(player.getId()); // 相手のオブジェクトIDを保存しておく
+			enemyLeader.sendPackets(new S_Message_YN(217, clanName, playerName)); // %0血盟の%1があなたの血盟との戦争を望んでいます。戦争に応じますか？（Y/N）
 			if (type == 0) { // 宣戦布告
 				enemyLeader.setTempID(player.getId()); // 相手のオブジェクトIDを保存しておく
 				enemyLeader.sendPackets(new S_Message_YN(217, clanName, playerName)); // %0血盟の%1があなたの血盟との戦争を望んでいます。戦争に応じますか？（Y/N）
