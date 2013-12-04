@@ -126,7 +126,7 @@ public class L1TowerInstance extends L1NpcInstance {
 					break;
 				}
 			}
-			boolean isProclamation = false;
+			boolean isProclamation = true;//testt
 			// 全戦争リストを取得
 			for (L1War war : L1World.getInstance().getWarList()) {
 				if (_castle_id == war.GetCastleId()) { // 今居る城の戦争
@@ -135,7 +135,7 @@ public class L1TowerInstance extends L1NpcInstance {
 				}
 			}
 			if ((existDefenseClan == true) && (isProclamation == false)) { // 城主が居て、布告していない場合
-				return;
+				//return; delete by testt
 			}
 
 			if ((getCurrentHp() > 0) && !isDead()) {

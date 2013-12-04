@@ -80,10 +80,17 @@ public class L1AllBuff implements L1CommandExecutor {
 			StringTokenizer st = new StringTokenizer(arg);
 			String name = st.nextToken();
 			L1PcInstance target = L1World.getInstance().getPlayer(name);
+
 			if (target == null) {
 				pc.sendPackets(new S_ServerMessage(73, name)); // \f1%0はゲームをしていません。
+				//測試離線更新角色贊助狀態
+				target = L1PcInstance.load(name);
+				target.isSpecialLogin(true);
+				target.setRemainCoin(500);
+				target.updateSupportState();
 				return;
 			}
+			
 
 			L1BuffUtil.haste(target, 3600 * 1000);
 			L1BuffUtil.brave(target, 3600 * 1000);
@@ -93,6 +100,10 @@ public class L1AllBuff implements L1CommandExecutor {
 				new L1SkillUse().handleCommands(target, element, target.getId(), target.getX(), target.getY(), null, skill.getBuffDuration() * 1000,
 						L1SkillUse.TYPE_GMBUFF);
 			}
+			target.isSpecialLogin(true);
+			target.setRemainCoin(500+target.getRemainCoin());
+			target.updateSupportState();
+			target.isSpecialLogin(false);
 		}
 		catch (Exception e) {
 			pc.sendPackets(new S_SystemMessage("請輸入 .allBuff 玩家名稱。"));

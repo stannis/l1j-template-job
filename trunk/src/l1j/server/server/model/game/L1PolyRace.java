@@ -36,7 +36,7 @@ import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.serverpackets.S_SkillBrave;
 import l1j.server.server.serverpackets.S_SkillHaste;
 import l1j.server.server.serverpackets.S_SystemMessage;
-import l1j.server.server.utils.Random;
+import l1j.server.server.utils.random.Random;//testt random
 
 
 public class L1PolyRace {

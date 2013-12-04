@@ -50,7 +50,7 @@ public class Effect {
 			case L1ItemId.POTION_OF_EXP_225: // 225%神力藥水
 			case L1ItemId.POTION_OF_EXP_250: // 250%神力藥水
 				skillId = itemId - 42999;
-				time = 900;
+				time = 3600;//testt
 				gfxid = itemId - 39699;
 				deleteRepeatedSkills(pc, skillId); // 與戰鬥藥水等相衝
 				pc.sendPackets(new S_ServerMessage(1292)); // 狩獵的經驗值將會增加。

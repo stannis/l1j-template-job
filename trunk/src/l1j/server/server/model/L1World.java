@@ -14,13 +14,20 @@
  */
 package l1j.server.server.model;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import l1j.server.Config;
+import l1j.server.L1DatabaseFactory;
 import l1j.server.server.model.Instance.L1PcInstance;
 import l1j.server.server.model.Instance.L1PetInstance;
 import l1j.server.server.model.Instance.L1SummonInstance;
@@ -28,6 +35,7 @@ import l1j.server.server.model.map.L1Map;
 import l1j.server.server.serverpackets.S_SystemMessage;
 import l1j.server.server.serverpackets.ServerBasePacket;
 import l1j.server.server.types.Point;
+import l1j.server.server.utils.SQLUtil;
 import l1j.server.server.utils.collections.Lists;
 import l1j.server.server.utils.collections.Maps;
 
@@ -544,6 +552,7 @@ public class L1World {
 	// _allClansのビュー
 	private Collection<L1Clan> _allClanValues;
 
+
 	public Collection<L1Clan> getAllClans() {
 		Collection<L1Clan> vs = _allClanValues;
 		return (vs != null) ? vs : (_allClanValues = Collections.unmodifiableCollection(_allClans.values()));
@@ -594,5 +603,56 @@ public class L1World {
 	 */
 	public void broadcastServerMessage(String message) {
 		broadcastPacketToAll(new S_SystemMessage(message));
+	}
+	
+	private short _maxLevel = 0;
+	
+	@SuppressWarnings("unused")
+	public short getMaxLevel() {
+		return _maxLevel;
+	}
+	
+	@SuppressWarnings("resource")
+	public void updateMaxLevel() {
+		//long program_start_time = System.currentTimeMillis();
+		Connection con = null;
+		PreparedStatement pstm = null;
+		ResultSet rs = null;
+		int[] irs;
+		int i = 0;
+		try {	
+			con = L1DatabaseFactory.getInstance().getConnection();
+			pstm = con
+					.prepareStatement("SELECT * FROM characters");
+			rs=pstm.executeQuery();
+			while (rs.next()) {								
+				++i;
+			}
+			irs = new int[i];
+			i = 0;	
+			rs=pstm.executeQuery();
+			while (rs.next()) {				
+				irs[i]=rs.getInt("maxlvl");
+				++i;
+			}			
+			int temp = irs[0];
+		    for (int is = 0; is < irs.length; is++) {
+		        if(temp < irs[is]) //土法煉鋼的if方法
+		        temp =  irs[is] ;
+		      }
+		    _maxLevel = (short)temp; //得到最大值
+		    //long program_end_time = System.currentTimeMillis();
+		   // System.out.println("陣列內的最大值 : " + _maxLevel);
+		    //System.out.println("程式執行共花了 : " +
+	        //        String.valueOf( (program_end_time - program_start_time) / 
+	        //                       1000f) + "秒。");
+			//_log.finest("stored char data:" + pc.getName());
+		} catch (SQLException e) {
+			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
+		} finally {
+			SQLUtil.close(rs);
+			SQLUtil.close(pstm);
+			SQLUtil.close(con);
+		}
 	}
 }

@@ -88,6 +88,7 @@ public class L1Quest {
 
 	public static final int QUEST_TUTOR = 300;//新手導師
 	public static final int QUEST_TUTOR2 = 304;//修練場管理員
+	public static final int QUEST_REBIRTH = 306;// 轉生任務
 
 	public static final int QUEST_END = 255; // 終了済みクエストのステップ
 

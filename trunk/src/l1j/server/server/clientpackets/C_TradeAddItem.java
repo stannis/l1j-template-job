@@ -84,6 +84,12 @@ public class C_TradeAddItem extends ClientBasePacket {
 			return;
 		}
 		
+		//新增限定等級交易防創角色洗錢判斷by testt
+		if (item.getItem().getItemId() == L1ItemId.ADENA && pc.getMaxLvl() < 60) {
+			pc.sendPackets(new S_ServerMessage(166,"金幣只有累積等級達60的老手才可以給予"));
+			return;
+		}
+		
 		L1PcInstance tradingPartner = (L1PcInstance) L1World.getInstance()
 				.findObject(pc.getTradeID());
 		if (tradingPartner == null) {

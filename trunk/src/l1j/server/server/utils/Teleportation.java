@@ -82,7 +82,8 @@ public class Teleportation {
 		if (pc.isReserveGhost()) { // ゴースト状態解除
 			pc.endGhost();
 		}
-		if (pc.isGhost() || pc.isGmInvis()) {}
+		
+		if (pc.isGhost() || pc.isGmInvis() || (pc.getDeathId() != 0) || (pc.getMapId() == 725)) {}//新增傳送到死亡戰場不重複傳送自己狀態
 		else if (pc.isInvisble()) {
 			pc.broadcastPacketForFindInvis(new S_OtherCharPacks(pc, true), true);
 		}
@@ -190,6 +191,10 @@ public class Teleportation {
 				&& (pc.getMapId() !=  (1005 + pc.getPortalNumber()))) {
 			L1DragonSlayer.getInstance().removePlayer(pc, pc.getPortalNumber());
 			pc.setPortalNumber(-1);
+		}
+		// 離開死亡競技場將競技編號歸零 by testt
+		if (pc.getMapId() >= 5153 && pc.getMapId() <= 5153 && pc.getDeathId() != 0) {
+			pc.setDeathId(0);
 		}
 		// 離開旅館地圖，旅館鑰匙歸零
 		if (pc.getMapId() <= 10000 && pc.getInnKeyId() != 0) {

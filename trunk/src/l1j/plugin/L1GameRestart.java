@@ -68,6 +68,7 @@ public class L1GameRestart {
 				int remnant = GetRestartTime() * 60;
 				System.out.println("》》正在載入 自動重開 設定...完成! " + GetRestartTime()
 						+ "分鐘後");
+				L1World.getInstance().updateMaxLevel();// 初始化角色最大等級 by testt
 				while (remnant > 0) {
 					for (int i = remnant; i >= 0; i--) {
 						SetRemnant(i);

@@ -29,13 +29,17 @@ import static l1j.server.server.model.skill.L1SkillId.EFFECT_POTION_OF_BATTLE;
 
 import java.util.List;
 import java.util.logging.Logger;
+import java.text.NumberFormat;
 
 import l1j.server.Config;
 import l1j.server.server.datatables.ExpTable;
+import l1j.server.server.datatables.ItemTable;
 import l1j.server.server.datatables.PetTable;
 import l1j.server.server.model.L1Character;
+import l1j.server.server.model.L1Inventory;
 import l1j.server.server.model.L1Object;
 import l1j.server.server.model.L1World;
+import l1j.server.server.model.Instance.L1ItemInstance;
 import l1j.server.server.model.Instance.L1NpcInstance;
 import l1j.server.server.model.Instance.L1PcInstance;
 import l1j.server.server.model.Instance.L1PetInstance;
@@ -85,6 +89,16 @@ public class CalcExp {
 		int partyHateExp = 0;
 		int partyHateLawful = 0;
 		int ownHateExp = 0;
+		int coinrate=2;
+		
+		//修正經驗值設定過高會出錯的問題by testt
+		switch(npc.getNpcId()){
+		case 152001:
+		case 152002:
+		case 152003:
+		case 152004:
+			coinrate=10000;
+		}
 
 		if (acquisitorList.size() != hateList.size()) {
 			return;
@@ -92,15 +106,18 @@ public class CalcExp {
 		for (i = hateList.size() - 1; i >= 0; i--) {
 			acquisitor = acquisitorList.get(i);
 			hate = hateList.get(i);
-			if ((acquisitor != null) && !acquisitor.isDead()) {
+			
+			//if ((acquisitor != null) && !acquisitor.isDead()) {
+			//死亡後，仇恨值不歸零  by testt
+			if (acquisitor != null) {
 				totalHateExp += hate;
 				if (acquisitor instanceof L1PcInstance) {
 					totalHateLawful += hate;
 				}
 			}
 			else { // nullだったり死んでいたら排除
-				acquisitorList.remove(i);
-				hateList.remove(i);
+					acquisitorList.remove(i);
+					hateList.remove(i);		
 			}
 		}
 		if (totalHateExp == 0) { // 取得者がいない場合
@@ -140,7 +157,7 @@ public class CalcExp {
 							if (totalHateLawful > 0) {
 								acquire_lawful = (lawful * hate / totalHateLawful);
 							}
-							AddExp(pc, acquire_exp, acquire_lawful);
+							AddExp(pc, acquire_exp, acquire_lawful,coinrate);//修正經驗值設定過高會出錯的問題by testt
 						}
 					}
 					else if (acquisitor instanceof L1PetInstance) {
@@ -244,7 +261,7 @@ public class CalcExp {
 								if (ownHateExp > 0) {
 									acquire_exp = (member_exp * hate / ownHateExp);
 								}
-								AddExp(pc, acquire_exp, member_lawful);
+								AddExp(pc, acquire_exp, member_lawful,coinrate);//修正經驗值設定過高會出錯的問題by testt
 							}
 						}
 						else if (acquisitor instanceof L1PetInstance) {
@@ -262,7 +279,7 @@ public class CalcExp {
 				}
 				else { // 攻撃に参加していなかった
 						// 自キャラクターのみに分配
-					AddExp(l1pcinstance, member_exp, member_lawful);
+					AddExp(l1pcinstance, member_exp, member_lawful,coinrate);//修正經驗值設定過高會出錯的問題by testt
 				}
 
 				// パーティーメンバーとそのペット・サモンのヘイトの合計を算出
@@ -310,7 +327,7 @@ public class CalcExp {
 										if (ownHateExp > 0) {
 											acquire_exp = (member_exp * hate / ownHateExp);
 										}
-										AddExp(pc, acquire_exp, member_lawful);
+										AddExp(pc, acquire_exp, member_lawful,coinrate);//修正經驗值設定過高會出錯的問題by testt
 									}
 								}
 								else if (acquisitor instanceof L1PetInstance) {
@@ -328,7 +345,7 @@ public class CalcExp {
 						}
 						else { // 攻撃に参加していなかった
 								// パーティーメンバーのみに分配
-							AddExp(ptMember, member_exp, member_lawful);
+							AddExp(ptMember, member_exp, member_lawful,coinrate);//修正經驗值設定過高會出錯的問題by testt
 						}
 					}
 				}
@@ -347,7 +364,7 @@ public class CalcExp {
 
 					if (acquisitor instanceof L1PcInstance) {
 						L1PcInstance pc = (L1PcInstance) acquisitor;
-						AddExp(pc, acquire_exp, acquire_lawful);
+						AddExp(pc, acquire_exp, acquire_lawful,coinrate);//修正經驗值設定過高會出錯的問題by testt
 					}
 					else if (acquisitor instanceof L1PetInstance) {
 						L1PetInstance pet = (L1PetInstance) acquisitor;
@@ -359,12 +376,14 @@ public class CalcExp {
 		}
 	}
 
-	private static void AddExp(L1PcInstance pc, int exp, int lawful) {
+	private static void AddExp(L1PcInstance pc, int exp, int lawful,int coinrate) {
 
 		int add_lawful = (int) (lawful * Config.RATE_LA) * -1;
 		pc.addLawful(add_lawful);
 
-		int _nLevel_t = pc.getLevel(); // 經驗值回饋獎勵系統
+		int _nLevel_t = pc.getMaxLvl(); // 經驗值回饋獎勵系統
+		short _nLevel_max = (short) L1World.getInstance().getMaxLevel();
+		short gaplvl = (short)(pc.getLevel() - pc.getHighLevel());
 		double exppenalty = ExpTable.getPenaltyRate(pc.getLevel());
 		double foodBonus = 1.0;
 		double expBonus = 1.0;
@@ -372,53 +391,92 @@ public class CalcExp {
 
 		// 魔法料理經驗加成
 		if (pc.hasSkillEffect(COOKING_1_7_N) || pc.hasSkillEffect(COOKING_1_7_S)) {
-			foodBonus = 1.01;
+			foodBonus = 1.1;// fix 增加經驗調整 by testt
 		}
 		if (pc.hasSkillEffect(COOKING_2_7_N) || pc.hasSkillEffect(COOKING_2_7_S)) {
-			foodBonus = 1.02;
+			foodBonus = 1.2;
 		}
 		if (pc.hasSkillEffect(COOKING_3_7_N) || pc.hasSkillEffect(COOKING_3_7_S)) {
-			foodBonus = 1.03;
+			foodBonus = 1.3;
 		}
 		// 戰鬥藥水、神力藥水經驗加成
 		if (pc.hasSkillEffect(EFFECT_POTION_OF_BATTLE)) {
 			expBonus = 1.2;
 		} else if (pc.hasSkillEffect(EFFECT_POTION_OF_EXP_150)) {
-			expBonus = 2.5;
+			expBonus = 1.5;
 		} else if (pc.hasSkillEffect(EFFECT_POTION_OF_EXP_175)) {
-			expBonus = 2.75;
+			expBonus = 1.75;
 		} else if (pc.hasSkillEffect(EFFECT_POTION_OF_EXP_200)) {
-			expBonus = 3.0;
+			expBonus = 2.0;
 		} else if (pc.hasSkillEffect(EFFECT_POTION_OF_EXP_225)) {
-			expBonus = 3.25;
+			expBonus = 2.25;
 		} else if (pc.hasSkillEffect(EFFECT_POTION_OF_EXP_250)) {
-			expBonus = 3.5;
+			expBonus = 2.5;
 		}
 		// 經驗值回饋獎勵系統
+		//if(Config.LEVEL_BONUS){
+		//	if (_nLevel_t >= 49 && _nLevel_t <= 63) {
+		//		LevelBonus = 1.64 - (_nLevel_t / 100D);
+		//	} else if (_nLevel_t == 64) {
+		//		LevelBonus = 1.01;
+		//	}
+		//}
+		// end
+		
+		// 經驗值回饋獎勵系統
+		//NumberFormat nf = NumberFormat.getInstance();
+        //nf.setMaximumFractionDigits( 0 );    //無小數點
+		
 		if(Config.LEVEL_BONUS){
-			if (_nLevel_t >= 49 && _nLevel_t <= 63) {
-				LevelBonus = 1.64 - (_nLevel_t / 100D);
-			} else if (_nLevel_t == 64) {
-				LevelBonus = 1.01;
+			if (pc.getLevel() >= 49 && _nLevel_t < _nLevel_max) {
+				LevelBonus = 1.2 + (_nLevel_max / 5D) - ((_nLevel_t + gaplvl) / 5D);
+				if (LevelBonus > 5)// 最大增加500%經驗
+					LevelBonus = 5;
+				if (pc.isShowMsg())
+					pc.sendPackets(new S_ServerMessage(166,"因為與伺服器最大角色等級差距的關係，額外取得了 " + (short) ((LevelBonus -1) * 100) +"% 經驗值"));
+			} else if (_nLevel_t == _nLevel_max) {
+				LevelBonus = 1.0;
 			}
 		}
 		// end
-		// 殷海薩加成條件
-		double _nExpRate = exppenalty * foodBonus * expBonus * LevelBonus * L1MagicDoll.getDoubleExpByDoll(pc); // 經驗加倍魔法娃娃
 
-		if (pc.isEinLevel() && pc.getEinPoint() != 0) {
-			_nExpRate *= 1.77;
-			pc.CalcExpCostEin((int) (exp * _nExpRate));
+		// 追憶之島原始經驗改為取得金碧 by testt
+		if (pc.getMapId() == 701) {			
+			L1ItemInstance item = ItemTable.getInstance().createItem(
+					40308);
+			
+			item.setCount(exp*coinrate);
+			if (item != null) {
+				if (pc.getInventory().checkAddItem(item, exp*coinrate) == L1Inventory.OK) {
+					pc.getInventory().storeItem(item);
+				} else { // 持てない場合は地面に落とす 處理のキャンセルはしない（不正防止）
+					L1World.getInstance()
+					.getInventory(pc.getX(), pc.getY(),
+							pc.getMapId()).storeItem(item);
+				}
+				pc.sendPackets(new S_ServerMessage(403, item
+						.getLogName())); // 得到多少金幣
+			}
 		}
-		int add_exp = (int) (exp * _nExpRate * Config.RATE_XP);
-		// end
+		else {
+			// 殷海薩加成條件
+			double _nExpRate = exppenalty * foodBonus * expBonus * LevelBonus * L1MagicDoll.getDoubleExpByDoll(pc); // 經驗加倍魔法娃娃
 
-		pc.addExp(add_exp);
-		// 大小GM顯示取得總經驗值
-		if (pc.getAccessLevel()== 200 || pc.getAccessLevel()== 100) {
-			pc.sendPackets(new S_ServerMessage(166,"總共取得 " + add_exp +" 經驗值")); //\f1%0%s %4%1%3 %2。
+			if (pc.isEinLevel() && pc.getEinPoint() != 0) {
+				_nExpRate *= 1.77;
+				pc.CalcExpCostEin((int) (exp * _nExpRate));
+			}		
+			int add_exp = (int) (exp * _nExpRate * Config.RATE_XP);
+			// end
+			pc.addExp(add_exp);
+			// 大小GM顯示取得總經驗值
+			if (pc.getAccessLevel()== 200 || pc.getAccessLevel()== 100) {
+				pc.sendPackets(new S_ServerMessage(166,"總共取得 " + add_exp +" 經驗值")); //\f1%0%s %4%1%3 %2。
+			}
+			// end
 		}
-		// end
+		// 追憶之島原始經驗改為取得金碧 end by testt
+
 	}
 
 	private static void AddExpPet(L1PetInstance pet, int exp) {

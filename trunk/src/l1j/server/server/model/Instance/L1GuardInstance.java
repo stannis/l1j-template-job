@@ -17,6 +17,7 @@ package l1j.server.server.model.Instance;
 import static l1j.server.server.model.skill.L1SkillId.FOG_OF_SLEEPING;
 import l1j.server.server.ActionCodes;
 import l1j.server.server.GeneralThreadPool;
+import l1j.server.server.datatables.CharacterTable;
 import l1j.server.server.datatables.NPCTalkDataTable;
 import l1j.server.server.model.L1Attack;
 import l1j.server.server.model.L1CastleLocation;
@@ -50,6 +51,22 @@ public class L1GuardInstance extends L1NpcInstance {
 					targetPlayer = pc;
 					break;
 				}
+				//攻擊非城堡血盟的玩家by testt
+				if (getNpcTemplate().getCastle() != 0) {
+					int clan_id = 0;
+					for (L1Clan clan : L1World.getInstance().getAllClans()) {
+						if (clan.getCastleId() // 城主クラン
+						== getNpcTemplate().getCastle()) {
+							clan_id = clan.getClanId();
+							break;
+						}
+					}
+					if (pc.getClanid() != clan_id || clan_id == 0) {
+						targetPlayer = pc;
+						break;
+					}
+				}
+				//end
 			}
 		}
 		if (targetPlayer != null) {

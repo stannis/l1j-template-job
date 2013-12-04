@@ -117,6 +117,7 @@ import l1j.server.server.serverpackets.S_Message_YN;
 import l1j.server.server.serverpackets.S_OtherCharPacks;
 import l1j.server.server.serverpackets.S_OwnCharStatus;
 import l1j.server.server.serverpackets.S_PacketBox;
+import l1j.server.server.serverpackets.S_PinkName;
 import l1j.server.server.serverpackets.S_Poison;
 import l1j.server.server.serverpackets.S_RemoveObject;
 import l1j.server.server.serverpackets.S_ServerMessage;
@@ -430,15 +431,22 @@ public class L1PcInstance extends L1Character {
 				&& perceivedFrom.getInnKeyId() != getInnKeyId()) {
 			return;
 		}
+		// 死亡競技場批次判斷
+		if (perceivedFrom.getMapId() >= 5153 && perceivedFrom.getMapId() <= 5164 // 死亡競技場內判斷
+				&& perceivedFrom.getDeathId() != getDeathId()) {
+			return;
+		}
 		if (isGmInvis() || isGhost()) {
 			return;
 		}
 		if (isInvisble() && !perceivedFrom.hasSkillEffect(GMSTATUS_FINDINVIS)) {
 			return;
 		}
-
 		perceivedFrom.addKnownObject(this);
-		perceivedFrom.sendPackets(new S_OtherCharPacks(this, perceivedFrom.hasSkillEffect(GMSTATUS_FINDINVIS))); // 自分の情報を送る
+		//在盟戰地圖中所有不同血盟的人都將成為敵人 by testt
+		perceivedFrom.sendPackets(new S_OtherCharPacks(this, perceivedFrom.hasSkillEffect(GMSTATUS_FINDINVIS), perceivedFrom.getClanid()));
+		//perceivedFrom.sendPackets(new S_OtherCharPacks(this, perceivedFrom.hasSkillEffect(GMSTATUS_FINDINVIS))); // 自分の情報を送る		
+		
 		if (isInParty() && getParty().isMember(perceivedFrom)) { // PTメンバーならHPメーターも送る
 			perceivedFrom.sendPackets(new S_HPMeter(this));
 		}
@@ -491,7 +499,7 @@ public class L1PcInstance extends L1Character {
 			for (L1Object visible : L1World.getInstance().getVisibleObjects(this, Config.PC_RECOGNIZE_RANGE)) {
 				if (!knownsObject(visible)) {
 					visible.onPerceive(this);
-				}
+				}				
 				else {
 					if (visible instanceof L1NpcInstance) {
 						L1NpcInstance npc = (L1NpcInstance) visible;
@@ -800,6 +808,30 @@ public class L1PcInstance extends L1Character {
 	public void setClanRank(int i) {
 		_clanRank = i;
 	}
+	
+	// add 紀錄最大等級 by testt
+	public int _maxLvl;
+	
+	public int getMaxLvl() {
+		return _maxLvl;
+	}
+	
+	public void setMaxLvl (int maxLvl) {
+		_maxLvl = maxLvl;
+	}
+	// end
+	
+	// add 轉生次數紀錄系統 by testt
+	public int _reBirth;
+	
+	public int getReBirth() {
+		return _reBirth;
+	}
+	
+	public void setReBirth (int reBirth) {
+		_reBirth = reBirth;
+	}
+	// end
 	
 	// sosodemon add 聲望系統 BY.SosoDEmoN
 	public int _famePoint;
@@ -1489,7 +1521,7 @@ public class L1PcInstance extends L1Character {
 			}
 
 			// 增加 被在追憶之島被殺屎不會調經驗且10秒後會自動復活  by testt
-			if ((!getMap().isEnabledDeathPenalty()) && (getMap().getId() == 701)) {
+			if ((!getMap().isEnabledDeathPenalty()) || (getMap().getId() == 701)) {
 				try {
 					sendPackets(new S_ServerMessage(166, "別慌張，你沒有掉經驗"));
 					sendPackets(new S_ServerMessage(166, "也別急著重新開始"));
@@ -2030,6 +2062,10 @@ public class L1PcInstance extends L1Character {
 	public short getBaseMaxHp() {
 		return _baseMaxHp;
 	}
+	
+	public void setBaseMaxHp(short i) {// add 轉生藥水 by testt
+		_baseMaxHp = i;
+	}
 
 	public void addBaseMaxHp(short i) {
 		i += _baseMaxHp;
@@ -2047,6 +2083,10 @@ public class L1PcInstance extends L1Character {
 
 	public short getBaseMaxMp() {
 		return _baseMaxMp;
+	}
+	
+	public void setBaseMaxMp(short i) {// add 轉生藥水 by testt
+		_baseMaxHp = i;
 	}
 
 	public void addBaseMaxMp(short i) {
@@ -2504,6 +2544,18 @@ public class L1PcInstance extends L1Character {
 		}
 		return result;
 	}
+	
+	// 更新贊助狀態 by testt
+	public void updateSupportState() throws Exception {
+		if (isGhost()) {
+			return;
+		}
+		if (isInCharReset()) {
+			return;
+		}
+
+		CharacterTable.getInstance().updateSupportState(this);
+	}
 
 	/**
 	 * このプレイヤーの状態をストレージへ書き込む。
@@ -2624,14 +2676,20 @@ public class L1PcInstance extends L1Character {
 
 	private void levelUp(int gap) {
 		resetLevel();
-
+		
+		
+		if (getQuest().get_step(306) == 0) {
+			getQuest().set_step(306, 1);
+		}
+		
 		// 復活のポーション
-		if ((getLevel() == 99) && Config.ALT_REVIVAL_POTION) {
+		if ((getLevel() >= 85) && Config.ALT_REVIVAL_POTION && getQuest().get_step(306) != 255) {
 			try {
-				L1Item l1item = ItemTable.getInstance().getTemplate(43000);
+				L1Item l1item = ItemTable.getInstance().getTemplate(43002);
 				if (l1item != null) {
-					getInventory().storeItem(43000, 1);
+					getInventory().storeItem(43002, 1);
 					sendPackets(new S_ServerMessage(403, l1item.getName()));
+					getQuest().set_end(306);
 				}
 				else {
 					sendPackets(new S_SystemMessage("返生藥水取得失敗。"));
@@ -2659,10 +2717,12 @@ public class L1PcInstance extends L1Character {
 		resetBaseDmgup();
 		resetBaseAc();
 		resetBaseMr();
+		short addLvl = (short)(getLevel() - getHighLevel());
 		if (getLevel() > getHighLevel()) {
+			setMaxLvl(getMaxLvl() + addLvl);
 			setHighLevel(getLevel());
 		}
-
+		
 		try {
 			// DBにキャラクター情報を書き込む
 			save();
@@ -2670,6 +2730,12 @@ public class L1PcInstance extends L1Character {
 		catch (Exception e) {
 			_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
 		}
+		
+		// 最大等級 by testt
+		if (getMaxLvl() > L1World.getInstance().getMaxLevel()) {
+			L1World.getInstance().updateMaxLevel();// 只有在有玩家超越最高等級時才更新全伺服器最大等級 by testt
+		}
+		
 		// ボーナスステータス
 		if ((getLevel() >= 51) && (getLevel() - 50 > getBonusStats())) {
 			if ((getBaseStr() + getBaseDex() + getBaseCon() + getBaseInt() + getBaseWis() + getBaseCha()) < 210) {
@@ -5069,4 +5135,104 @@ public class L1PcInstance extends L1Character {
 		filterList.clear();
 	}
 	// end
+	
+	//贊助狀態by testt
+	private boolean _isSpecialLogin = false;//判斷是否為特殊登入
+	
+	public boolean isSpecialLogin() {
+		return _isSpecialLogin;
+	}
+	
+	public void isSpecialLogin(boolean isSpecialLogin) {
+		_isSpecialLogin = isSpecialLogin;
+	}
+	
+	private boolean _isSupport = false;//判斷是否有過贊助
+	
+	public boolean isSupport() {
+		return _isSupport;
+	}
+	
+	public void isSupport(boolean isSupport) {
+		_isSupport = isSupport;
+	}
+	
+	private int _remainCoin = 0;//尚未領取的GOLD幣
+	
+	public int getRemainCoin() {
+		return _remainCoin;
+	}
+	
+	public void setRemainCoin(int remainCoin) {
+		_remainCoin = remainCoin;
+	}
+	
+	private int _totalSupport = 0;//總共贊助的金額
+	
+	public int getTotalSupport() {
+		return _totalSupport;
+	}
+	
+	public void setTotalSupport(int totalSupport) {
+		_totalSupport = totalSupport;
+	}
+	
+	private boolean _firstSupportReward = false;//首次儲值是否已領取
+	
+	public boolean isfirstSupportReward() {
+		return _firstSupportReward;
+	}
+	
+	public void isfirstSupportReward(boolean firstSupportReward) {
+		_firstSupportReward = firstSupportReward;
+	}
+	
+	private int _rewardStep = 0;//贊助階段
+	
+	public int getRewardStep() {
+		return _rewardStep;
+	}
+	
+	public void setRewardStep(int rewardStep) {
+		_rewardStep = rewardStep;
+	}
+	
+	private int _checkRewardStep = 0;//確認可領取的獎勵
+	
+	public int checkRewardStep() {
+		return _checkRewardStep;
+	}
+	
+	public void checkRewardStep(int checkRewardStep) {
+		_checkRewardStep = checkRewardStep;
+	}
+	//end
+	
+	//是否顯示伺服器相關訊息
+	private boolean _showMsg = false;
+	
+	public void isShowMsg (boolean showMsg) {
+		_showMsg = showMsg;
+	}
+	
+	public boolean isShowMsg() {
+		return _showMsg;
+	}
+	//end
+	
+	//防具階級等級近戰修正
+	private short _shortStepFix;
+	
+	public void addShortStepFix(int i) {
+		_shortStepFix += (short)i;
+	}
+	
+	public double getShortStepFix() {
+		double temp = (double) _shortStepFix / 100D;
+		//System.out.println("近戰防禦修正比率為" + temp);
+		return temp;
+	}
+	
+	//武魂進食
+
 }

@@ -94,6 +94,8 @@ public class L1UltimateBattle {
 
 	private boolean _usePot;
 
+	private static boolean _bossdie=false;
+	
 	private int _hpr;
 
 	private int _mpr;
@@ -307,10 +309,16 @@ public class L1UltimateBattle {
 		private void waitForNextRound(int curRound) throws InterruptedException {
 			final int WAIT_TIME_TABLE[] =
 			{ 6, 6, 2, 18 };
-
+			
 			int wait = WAIT_TIME_TABLE[curRound - 1];
+			if ( (_mapId == 701) && (curRound == 4)){
+				wait = 3000; 
+			}
 			for (int i = 0; i < wait; i++) {
 				Thread.sleep(10000);
+				if (checkBossdie()){
+					i = wait;//追憶之島boss死亡判斷by testt
+				}
 				 //removeRetiredMembers();
 			}
 			removeRetiredMembers();
@@ -355,13 +363,15 @@ public class L1UltimateBattle {
 					int rndy = Random.nextInt(4);
 					int locx = 33503 + rndx;
 					int locy = 32764 + rndy;
-					short mapid = 4;
+					short mapid = 4;			
+					Thread.sleep(100);//延遲傳送，減少大量傳送所造成的伺服器負擔by testt
 					L1Teleport.teleport(pc, locx, locy, mapid, 5, true);
 					removeMember(pc);
 				}
 				clearColosseum();
 				setActive(false);
 				setNowUb(false);
+				setBossdie(false);//追憶之島boss死亡判斷by testt
 			}
 			catch (Exception e) {
 				_log.log(Level.SEVERE, e.getLocalizedMessage(), e);
@@ -646,7 +656,31 @@ public class L1UltimateBattle {
 		int nowTime = Integer.valueOf(sdf.format(realTime.getTime()));
 		return _ubTimes.contains(nowTime);
 	}
+	
+	//判斷追憶之島boss是否死亡 by testt
+	public static void setBossdie(boolean i){
+		_bossdie=i;
+	}
+	
+	private static int _checkBossdie=0;
+	
+	public static void Bossdie(){
+		set_checkBossdie(get_checkBossdie() + 1);
+	}
+	
+	public static int get_checkBossdie() {
+		return _checkBossdie;
+	}
 
+	public static void set_checkBossdie(int _checkBossdie) {
+		L1UltimateBattle._checkBossdie = _checkBossdie;
+	}
+	
+	private static boolean checkBossdie(){
+		return _bossdie;
+	}
+	//判斷追憶之島boss是否死亡end  by testt
+	
 	private void setActive(boolean f) {
 		_active = f;
 	}
@@ -735,4 +769,8 @@ public class L1UltimateBattle {
 		{ nextUbTime, classes, sex, loLevel, hiLevel, teleport, res, pot, hpr, mpr, summon, summon2 };
 		return _ubInfo;
 	}
+
+
+
+
 }

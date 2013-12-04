@@ -14,6 +14,7 @@
  */
 package l1j.server.server.templates;
 
+
 public class L1Weapon extends L1Item {
 	/**
 	 * 
@@ -98,5 +99,25 @@ public class L1Weapon extends L1Item {
 				|| weapon_type == 15 || weapon_type == 16 || weapon_type == 18 || weapon_type == 19);
 
 		return bool;
+	}
+	
+	@Override 
+	//增加爆擊元素 by tesst
+	public int getCriticaChance() {
+		int weapon_type = getType();
+		int chance = 3;
+
+		if (weapon_type == 3 || weapon_type == 4
+				|| weapon_type == 5 || weapon_type == 11 || weapon_type == 12
+				|| weapon_type == 15 || weapon_type == 16 || weapon_type == 18 || weapon_type == 19) {
+			chance += 8;
+		} else {
+			chance += 6;
+		}
+		
+		if (weapon_type == 2 || weapon_type == 6)
+			chance += 9;
+
+		return chance;
 	}
 }

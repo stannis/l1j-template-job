@@ -91,7 +91,7 @@ public class CharacterTable {
 		L1PcInstance pc = null;
 		try {
 			pc = restoreCharacter(charName);
-
+			
 			// マップの範囲外ならSKTに移動させる
 			L1Map map = L1WorldMap.getInstance().getMap(pc.getMapId());
 
@@ -260,5 +260,35 @@ public class CharacterTable {
 	public L1CharName[] getCharNameList() {
 		return _charNameList.values().toArray(new L1CharName[_charNameList.size()]);
 	}
+	
+	public static boolean doesCharNameSupport(String name) {
+		boolean result = true;
+		java.sql.Connection con = null;
+		PreparedStatement pstm = null;
+		ResultSet rs = null;
+		try {
+			con = L1DatabaseFactory.getInstance().getConnection();
+			pstm = con.prepareStatement("SELECT char_name FROM characters_support WHERE char_name=?");
+			pstm.setString(1, name);
+			rs = pstm.executeQuery();
+			result = rs.next();
+		}
+		catch (SQLException e) {
+			_log.warning("could not check existing charname:" + e.getMessage());
+		}
+		finally {
+			SQLUtil.close(rs);
+			SQLUtil.close(pstm);
+			SQLUtil.close(con);
+		}
+		return result;
+	}
+	
 
+	public void updateSupportState(L1PcInstance pc) throws Exception {
+		synchronized (pc) {
+		_charStorage.updateSupportState(pc);
+		_log.finest("storeCharacter: " + pc.getName());
+	}
+	}
 }

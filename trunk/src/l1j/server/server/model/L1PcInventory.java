@@ -29,6 +29,8 @@ import java.util.Calendar;
 
 
 
+
+
 import l1j.server.Config;
 import l1j.server.server.datatables.PetTable;
 import l1j.server.server.datatables.RaceTicketTable;
@@ -277,7 +279,12 @@ public class L1PcInventory extends L1Inventory {
 					chklist=true;
 				
 				}
-				//System.out.println(wss.get_itemobjid());
+				try {
+					Thread.sleep(0);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}//System.out.println(wss.get_itemobjid());
 			}					
 			
 			if (chklist){
@@ -323,6 +330,10 @@ public class L1PcInventory extends L1Inventory {
 	public static final int COL_ATTR_ENCHANT_KIND = 1024;
 
 	public static final int COL_ATTR_ENCHANT_LEVEL = 2048;
+	
+	public static final int COL_ITEM_ENCHANT_LEVEL = 4096;//強化裝備等級 BY TESTT
+	
+	public static final int COL_STEP_ENCHANT_LEVEL = 8192;//提升裝備階級 BY TESTT
 
 	public static final int COL_ADDHP = 1;
 
@@ -364,6 +375,14 @@ public class L1PcInventory extends L1Inventory {
 	 */
 	@Override
 	public void updateItem(L1ItemInstance item, int column) {
+		if (column >= COL_STEP_ENCHANT_LEVEL) { // 階級升級數by testt
+			_owner.sendPackets(new S_ItemStatus(item));
+			column -= COL_STEP_ENCHANT_LEVEL;
+		}
+		if (column >= COL_ITEM_ENCHANT_LEVEL) { // 裝備升級數by testt
+			_owner.sendPackets(new S_ItemStatus(item));
+			column -= COL_ITEM_ENCHANT_LEVEL;
+		}
 		if (column >= COL_ATTR_ENCHANT_LEVEL) { // 属性強化数
 			_owner.sendPackets(new S_ItemStatus(item));
 			column -= COL_ATTR_ENCHANT_LEVEL;
@@ -445,6 +464,14 @@ public class L1PcInventory extends L1Inventory {
 
 		try {
 			CharactersItemStorage storage = CharactersItemStorage.create();
+			if (column >= COL_STEP_ENCHANT_LEVEL) { // 階級升級數by testt
+				storage.updateItemStepLevel(item);
+				column -= COL_STEP_ENCHANT_LEVEL;
+			}
+			if (column >= COL_ITEM_ENCHANT_LEVEL) { // 裝備升級數by testt
+				storage.updateItemLevel(item);
+				column -= COL_ITEM_ENCHANT_LEVEL;
+			}
 			if (column >= COL_ATTR_ENCHANT_LEVEL) { // 属性強化数
 				storage.updateItemAttrEnchantLevel(item);
 				column -= COL_ATTR_ENCHANT_LEVEL;

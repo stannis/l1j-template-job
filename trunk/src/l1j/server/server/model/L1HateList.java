@@ -23,6 +23,7 @@ import java.util.Set;
 
 import l1j.server.server.model.Instance.L1NpcInstance;
 import l1j.server.server.model.Instance.L1PcInstance;
+import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.utils.collections.Lists;
 import l1j.server.server.utils.collections.Maps;
 
@@ -47,7 +48,12 @@ public class L1HateList {
 			return;
 		}
 		if (_hateMap.containsKey(cha)) {
+			//int temp = _hateMap.get(cha);
 			_hateMap.put(cha, _hateMap.get(cha) + hate);
+			//顯示仇恨值by testt
+			//L1PcInstance pc = (L1PcInstance) cha;
+			//pc.sendPackets(new S_ServerMessage(166, "目前對目標的仇恨值為" + temp));
+			//pc.sendPackets(new S_ServerMessage(166, "目前對目標新增的仇恨值為" + hate));
 		}
 		else {
 			_hateMap.put(cha, hate);
@@ -80,8 +86,16 @@ public class L1HateList {
 
 		for (Map.Entry<L1Character, Integer> e : _hateMap.entrySet()) {
 			if (hate < e.getValue()) {
-				cha = e.getKey();
-				hate = e.getValue();
+				//死亡角色不移除仇恨清單，並且找出存活角色的最大仇恨者by testt
+				
+					cha = e.getKey();
+				if (!cha.isDead()){	
+					hate = e.getValue();
+				}
+				else {
+					cha = null;
+				}
+				//死亡角色不移除仇恨清單，並且找出存活角色的最大仇恨者end by testt
 			}
 		}
 		return cha;
@@ -90,7 +104,13 @@ public class L1HateList {
 	public synchronized void removeInvalidCharacter(L1NpcInstance npc) {
 		List<L1Character> invalidChars = Lists.newList();
 		for (L1Character cha : _hateMap.keySet()) {
-			if ((cha == null) || cha.isDead() || !npc.knownsObject(cha)) {
+			//原始程式碼段
+			//if ((cha == null) || cha.isDead() || !npc.knownsObject(cha)) {
+			//	invalidChars.add(cha);
+			//}
+			//原始程式碼段end
+			//死亡角色不移除仇恨清單，並且找出存活角色的最大仇恨者by testt
+			if ((cha == null) || !npc.knownsObject(cha)) {
 				invalidChars.add(cha);
 			}
 		}

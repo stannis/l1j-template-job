@@ -34,13 +34,13 @@ import l1j.server.server.serverpackets.S_DoActionGFX;
 import l1j.server.server.serverpackets.S_EffectLocation;
 import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.serverpackets.S_SkillIconGFX;
+import l1j.server.server.serverpackets.S_SkillSound;
 import l1j.server.server.serverpackets.S_UseArrowSkill;
 import l1j.server.server.serverpackets.S_UseAttackSkill;
 import l1j.server.server.templates.L1MagicDoll;
 import l1j.server.server.templates.L1Skills;
 import l1j.server.server.types.Point;
-import l1j.server.server.utils.Random;
-
+import l1j.server.server.utils.Random;//testt random
 import static l1j.server.server.model.skill.L1SkillId.*;
 
 public class L1Attack {
@@ -191,6 +191,80 @@ public class L1Attack {
 			17, 18, 19, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, // 31～45まで
 			23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27, 27, 28 }; // 46～60まで
 
+	public static final int[][] weaponlvlHit = new int[5][10];//武器等級傷害修正by testt
+
+	static {
+		//武器等級命中修正by testt
+		int hit = 0;
+		int floor = 1;
+		for (int step = 0; step <= 4; step++) {
+			for (int lvl = 0; lvl <= 8; lvl++) {
+				if (lvl < 3) {
+					hit += (step + 1) * ((lvl / 3) + 1);
+				}
+				else {
+					hit += (step + 1) + (lvl / 3);
+				}
+				if (step < floor) {
+					if (lvl+1+(floor-step) > 9) {
+						continue;
+					}
+					weaponlvlHit[step][lvl+1+(floor-step)] = hit;
+				}
+				weaponlvlHit[step][lvl+1] = hit;				
+			}
+			hit = 0;
+		}
+	}
+	
+	public static final int[][] weaponlvlDmg = new int[5][10];//武器等級傷害修正by testt
+
+	static {
+		//武器等級傷害修正by testt
+		int dmg = 0;
+		for (int step = 0; step <= 4; step++) { // 0～22は2毎に+1
+			for (int lvl = 0; lvl <= 8; lvl++) {
+				if (lvl < 3) {
+					dmg += (step + 1) * ((lvl / 3) + 1);
+				}
+				else {
+					dmg += (step + 1) + (lvl / 3);
+				}
+				weaponlvlDmg[step][lvl+1] = dmg;				
+			}
+			dmg = 0;
+		}
+	}
+	
+	public static final int[][] weaponlvlDmgSmall = new int[5][10];//武器等級小怪傷害修正by testt
+	public static final int[][] weaponlvlDmgLarge = new int[5][10];//武器等級大怪傷害修正by testt
+	
+	static {
+		//武器等級大小傷修正by testt
+		int dmg = 0;
+		int floor = 2;
+		for (int step = 0; step <= 4; step++) { 
+			for (int lvl = 0; lvl <= 8; lvl++) {
+				if (lvl < 3) {
+					dmg += (step + 1) * ((lvl / 3) + 1);
+				}
+				else {
+					dmg += (step + 1) + (lvl / 3);
+				}
+				if (step < floor) {
+					if (lvl + 1 + (floor - step) > 9) {
+						continue;
+					}
+					weaponlvlDmgSmall[step][lvl + 1 + (floor - step)] = dmg;
+					weaponlvlDmgLarge[step][lvl + 1 + (floor - step)] = dmg;
+				}
+				weaponlvlDmgSmall[step][lvl + 1] = dmg;
+				weaponlvlDmgLarge[step][lvl + 1] = dmg;
+			}
+			dmg = 0;
+		}
+	}
+	
 	private static final int[] strDmg = new int[128];
 
 	static {
@@ -300,11 +374,21 @@ public class L1Attack {
 				_weaponType = weapon.getItem().getType1();
 				_weaponType2 = weapon.getItem().getType();
 				_weaponAddHit = weapon.getItem().getHitModifier()
-						+ weapon.getHitByMagic();
+						+ weapon.getHitByMagic()
+						+ weaponlvlHit[weapon.getStepLevel()][weapon.getItemLevel()];
+						//武器等級命中修正by testt
 				_weaponAddDmg = weapon.getItem().getDmgModifier()
-						+ weapon.getDmgByMagic();
-				_weaponSmall = weapon.getItem().getDmgSmall();
-				_weaponLarge = weapon.getItem().getDmgLarge();
+						+ weapon.getDmgByMagic()
+						+ weaponlvlDmg[weapon.getStepLevel()][weapon.getItemLevel()];
+						//武器等級傷害修正by testt
+				if (_weaponType == 20) {
+					_weaponSmall = weapon.getItem().getDmgSmall();
+					_weaponLarge = weapon.getItem().getDmgLarge();
+				}
+				else {
+					_weaponSmall = weapon.getItem().getDmgSmall() + weaponlvlDmgSmall[weapon.getStepLevel()][weapon.getItemLevel()];
+					_weaponLarge = weapon.getItem().getDmgLarge() + weaponlvlDmgLarge[weapon.getStepLevel()][weapon.getItemLevel()];
+				}
 				_weaponRange = weapon.getItem().getRange();
 				_weaponBless = weapon.getItem().getBless();
 				_weaponEnchant = weapon.getEnchantLevel();
@@ -332,6 +416,7 @@ public class L1Attack {
 				_weaponAttrEnchantKind = weapon.getAttrEnchantKind();
 				_weaponAttrEnchantLevel = weapon.getAttrEnchantLevel();
 			}
+			
 		} else if (attacker instanceof L1NpcInstance) {
 			_npc = (L1NpcInstance) attacker;
 			if (target instanceof L1PcInstance) {
@@ -472,15 +557,23 @@ public class L1Attack {
 		attackerDice -= _targetPc.getDodge();
 		attackerDice += _targetPc.getNdodge();
 
-		int defenderDice = 0;
+		int defenderDice = calcPcDefenderDice();
 
-		int defenderValue = (int) (_targetPc.getAc() * 1.5) * -1;
+		//防具階級防禦修正 by testt
+		//double defenderValue = 0;
+		//if (_pc != null && weapon.getEnchantLevel() > 6) { 
+		//	defenderValue = (double) (_targetPc.getAc() * 1.5 * (1 + _targetPc.getShortStepFix()
+		//			- (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D)) * -1;
+		//} else {
+		//	defenderValue = (double) (_targetPc.getAc() * 1.5 * (1 + _targetPc.getShortStepFix())) * -1;
+		//}
+		//int defenderValue = (int) (_targetPc.getAc() * 1.5) * -1;
 
-		if (_targetPc.getAc() >= 0) {
-			defenderDice = 10 - _targetPc.getAc();
-		} else if (_targetPc.getAc() < 0) {
-			defenderDice = 10 + Random.nextInt(defenderValue) + 1;
-		}
+		//if (_targetPc.getAc() >= 0) {
+		//	defenderDice = 10 - _targetPc.getAc();
+		//} else if (_targetPc.getAc() < 0) {
+		//	defenderDice = 10 + Random.nextInt((short)defenderValue) + 1;
+		//}
 
 		int fumble = _hitRate - 9;
 		int critical = _hitRate + 10;
@@ -495,6 +588,7 @@ public class L1Attack {
 			} else if (attackerDice <= defenderDice) {
 				_hitRate = 0;
 			}
+			//System.out.println("攻擊者的近戰命中為" + attackerDice);
 		}
 
 		if (_weaponType2 == 17 || _weaponType2 == 19) {
@@ -614,7 +708,27 @@ public class L1Attack {
 		attackerDice -= _targetNpc.getDodge();
 		attackerDice += _targetNpc.getNdodge();
 
-		int defenderDice = 10 - _targetNpc.getAc();
+		//int defenderDice = 10 - _targetNpc.getAc();
+		// 修正怪物防禦，不然太弱了！by testt
+		int defenderDice = 0;
+		double defenderValue = 0;
+		if (_weaponType == 0){
+			defenderValue = (double) (_targetNpc.getAc() * 1.5 * (1 + _targetNpc.getShortStepFix())) * -1;
+		} else if (_pc != null && weapon.getEnchantLevel() > 6) {
+			defenderValue = (double) (_targetNpc.getAc() * 1.5 * (1 + _targetNpc.getShortStepFix()
+								- (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D)) * -1;
+			//System.out.println("被攻擊者的近戰防禦骰子修正為" + ((1 + _targetNpc.getShortStepFix()
+			//		- (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D)* -1));
+		}else {
+			defenderValue = (double) (_targetNpc.getAc() * 1.5 * (1 + _targetNpc.getShortStepFix())) * -1;
+		}
+		
+		if (_targetNpc.getAc() >= 0) {
+			defenderDice = 10 - _targetNpc.getAc();
+		} else if (_targetNpc.getAc() < 0) {
+			defenderDice = 10 + Random.nextInt((short)defenderValue) + 1;
+		}
+		// END
 
 		int fumble = _hitRate - 9;
 		int critical = _hitRate + 10;
@@ -662,15 +776,16 @@ public class L1Attack {
 		attackerDice -= _targetPc.getDodge();
 		attackerDice += _targetPc.getNdodge();
 
-		int defenderDice = 0;
-
-		int defenderValue = (_targetPc.getAc()) * -1;
-
-		if (_targetPc.getAc() >= 0) {
-			defenderDice = 10 - _targetPc.getAc();
-		} else if (_targetPc.getAc() < 0) {
-			defenderDice = 10 + Random.nextInt(defenderValue) + 1;
-		}
+		//int defenderDice = 0;
+//
+		//int defenderValue = (_targetPc.getAc()) * -1;
+//
+		//if (_targetPc.getAc() >= 0) {
+		//	defenderDice = 10 - _targetPc.getAc();
+		//} else if (_targetPc.getAc() < 0) {
+		//	defenderDice = 10 + Random.nextInt(defenderValue) + 1;
+		//}
+		int defenderDice = calcNpcPcDefenderDice();
 
 		int fumble = _hitRate;
 		int critical = _hitRate + 19;
@@ -913,7 +1028,32 @@ public class L1Attack {
 		//		|| _weaponId == 300 || _weaponId == 301 || _weaponId == 302
 		//		|| _weaponId == 303) { // バフォメットスタッフ
 		//	dmg += L1WeaponSkill.getBaphometStaffDamage(_pc, _target);
-		//} else 
+		//} else
+		
+		// 加入爆擊元素 by testt
+		double cirtical = weapon.getItem().getCriticaChance()
+				+ _pc.getWis() / 3
+				- _targetPc.getShortStepFix() * 25;
+		int rnd = Random.nextInt(100) + 1;
+		double dmgfix = 1;
+		if (cirtical > 33)
+			cirtical = 33;
+		if (cirtical >= rnd) {	
+			if (weapon.getEnchantLevel() > 6) {
+				dmgfix *= 1.8
+				+ (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D
+				- _targetPc.getShortStepFix();
+			} else {
+				dmgfix *= 1.8 - _targetPc.getShortStepFix();
+			}
+			if (dmgfix < 1)
+				dmgfix = 1;
+			dmg *= dmgfix;
+			_pc.sendPackets(new S_SkillSound(_targetPc.getId(), 2546));
+			_pc.broadcastPacket(new S_SkillSound(_targetPc.getId(), 2546));
+		}
+		
+		
 		if (_weaponId == 2 || _weaponId == 200002) { // ダイスダガー
 			dmg += L1WeaponSkill.getDiceDaggerDamage(_pc, _targetPc, weapon);
 		} else if (_weaponId == 204 || _weaponId == 100204) { // 真紅のクロスボウ
@@ -962,7 +1102,11 @@ public class L1Attack {
 				|| _targetPc.hasSkillEffect(COOKING_3_7_S)) {
 			dmg -= 5;
 		}
-
+		
+		//新增PK時會判斷減傷公式 by testt
+		if (_weaponType != 0)  // 空手不判斷
+			dmg -= calcPcDefense();
+		
 		if (_targetPc.hasSkillEffect(REDUCTION_ARMOR)) {
 			int targetPcLvl = _targetPc.getLevel();
 			if (targetPcLvl < 50) {
@@ -1045,6 +1189,35 @@ public class L1Attack {
 		//		|| _weaponId == 303) { // バフォメットスタッフ
 		//	dmg += L1WeaponSkill.getBaphometStaffDamage(_pc, _target);
 		//} else 
+		
+		// 加入爆擊元素 by testt
+		// 加入爆擊元素 by testt
+		double cirtical = weapon.getItem().getCriticaChance()
+				+ _pc.getWis() / 3
+				- _targetNpc.getShortStepFix() * 25;
+		int rnd = Random.nextInt(100) + 1;
+		double dmgfix = 1;
+		if (cirtical > 33)
+			cirtical = 33;
+		if (cirtical >= rnd) {	
+			if (weapon.getEnchantLevel() > 6) {
+				dmgfix *= 1.8
+				+ (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D
+				- _targetNpc.getShortStepFix();
+			} else {
+				dmgfix *= 1.8 - _targetNpc.getShortStepFix();
+			}
+			//System.out.println("對目前攻擊對象的爆擊傷害倍率:" + dmgfix);
+			//System.out.println("武器增加的傷害倍率：" + (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() + "%");
+			//System.out.println("武器原始的爆擊率：" + weapon.getItem().getCriticaChance() + "%");
+			//System.out.println("武器整體的爆擊率：" + cirtical + "%");
+			if (dmgfix < 1)
+				dmgfix = 1;
+			dmg *= dmgfix;
+			_pc.sendPackets(new S_SkillSound(_targetNpc.getId(), 2546));
+			_pc.broadcastPacket(new S_SkillSound(_targetNpc.getId(), 2546));
+		}
+		
 		if ((_weaponId == 2) || (_weaponId == 200002)) { // ダイスダガー
 			dmg += L1WeaponSkill.getDiceDaggerDamage(_pc, _targetNpc, weapon);
 		} else if ((_weaponId == 204) || (_weaponId == 100204)) { // 真紅のクロスボウ
@@ -1300,10 +1473,64 @@ public class L1Attack {
 		return dmg;
 	}
 
+	//近戰NPCPC命中修正 by testt
+	private int calcNpcPcDefenderDice() {
+		int defenderDice = 0;
+		double defenderValue = 0;
+
+		defenderValue = (double) (_targetPc.getAc() * (1 + _targetPc.getShortStepFix())) * -1;
+		
+		if (_targetPc.getAc() >= 0) {
+			defenderDice = 10 - _targetPc.getAc();
+		} else if (_targetPc.getAc() < 0) {
+			defenderDice = 10 + Random.nextInt((short)defenderValue) + 1;
+		}
+		//System.out.println("被攻擊者的近戰防禦骰子最大值為" + (10 + defenderValue + 1));
+		//System.out.println("被攻擊者的近戰防禦骰子為" + defenderDice);
+		//System.out.println(_targetPc.getShortStepFix());
+		return defenderDice;
+	}	
+	
+	//近戰PCPC命中修正 by testt
+	private int calcPcDefenderDice() {
+		int defenderDice = 0;
+		double defenderValue = 0;
+		if (_weaponType == 0){
+			defenderValue = (double) (_targetPc.getAc() * 1.5 * (1 + _targetPc.getShortStepFix())) * -1;
+		}else if (_pc != null && weapon.getEnchantLevel() > 6) { 
+			defenderValue = (double) (_targetPc.getAc() * 1.5 * (1 + _targetPc.getShortStepFix()
+					- (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D)) * -1;
+			//System.out.println("攻擊者的近戰防禦穿刺術值為" + (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D);
+		} else {
+			defenderValue = (double) (_targetPc.getAc() * 1.5 * (1 + _targetPc.getShortStepFix())) * -1;
+		}
+		
+		if (_targetPc.getAc() >= 0) {
+			defenderDice = 10 - _targetPc.getAc();
+		} else if (_targetPc.getAc() < 0) {
+			defenderDice = 10 + Random.nextInt((short)defenderValue) + 1;
+		}
+		//System.out.println("被攻擊者的近戰防禦骰子最大值為" + (10 + defenderValue + 1));
+		//System.out.println("被攻擊者的近戰防禦骰子為" + defenderDice);
+		return defenderDice;
+	}
+	
 	// ●●●● プレイヤーのＡＣによるダメージ軽減 ●●●●
 	private int calcPcDefense() {
-		int ac = Math.max(0, 10 - _targetPc.getAc());
-		int acDefMax = _targetPc.getClassFeature().getAcDefenseMax(ac);
+		//int ac = Math.max(0, 10 - _targetPc.getAc());
+		//int acDefMax = _targetPc.getClassFeature().getAcDefenseMax(ac);
+		//return Random.nextInt(acDefMax + 1);
+		double ac = 0;
+		if (_pc != null && weapon.getEnchantLevel() > 6) {
+			ac = Math.max(0, 10 - (_targetPc.getAc()
+					* (1 + _targetPc.getShortStepFix()
+							- (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D)));// add PCPC防具近戰修正 by test
+			//System.out.println("攻擊者的近戰防禦穿刺術值為" + (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D);
+		} else {
+			ac = Math.max(0, 10 - (_targetPc.getAc() * (1 + _targetPc.getShortStepFix())));// add NPCPC防具近戰修正 by test
+		}
+		int acDefMax = _targetPc.getClassFeature().getAcDefenseMax((int)ac);
+		//System.out.println("被攻擊者的近戰防禦減商修正為" + acDefMax);
 		return Random.nextInt(acDefMax + 1);
 	}
 

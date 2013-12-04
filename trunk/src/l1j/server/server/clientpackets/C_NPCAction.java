@@ -13,6 +13,7 @@
 
 package l1j.server.server.clientpackets;
 
+import static l1j.server.server.model.skill.L1SkillId.ABSOLUTE_BARRIER;
 import static l1j.server.server.model.skill.L1SkillId.AWAKEN_ANTHARAS;
 import static l1j.server.server.model.skill.L1SkillId.AWAKEN_FAFURION;
 import static l1j.server.server.model.skill.L1SkillId.AWAKEN_VALAKAS;
@@ -22,10 +23,22 @@ import static l1j.server.server.model.skill.L1SkillId.EFFECT_BLESS_OF_CRAY;
 import static l1j.server.server.model.skill.L1SkillId.EFFECT_BLESS_OF_SAELL;
 import static l1j.server.server.model.skill.L1SkillId.ELEMENTAL_PROTECTION;
 import static l1j.server.server.model.skill.L1SkillId.ENCHANT_WEAPON;
+import static l1j.server.server.model.skill.L1SkillId.ENTANGLE;
+import static l1j.server.server.model.skill.L1SkillId.GREATER_HASTE;
+import static l1j.server.server.model.skill.L1SkillId.HASTE;
+import static l1j.server.server.model.skill.L1SkillId.HOLY_WALK;
+import static l1j.server.server.model.skill.L1SkillId.MASS_SLOW;
+import static l1j.server.server.model.skill.L1SkillId.MOVING_ACCELERATION;
 import static l1j.server.server.model.skill.L1SkillId.SHAPE_CHANGE;
+import static l1j.server.server.model.skill.L1SkillId.SLOW;
+import static l1j.server.server.model.skill.L1SkillId.STATUS_THIRD_SPEED;//三段加速by testt
+import static l1j.server.server.model.skill.L1SkillId.STATUS_BRAVE;
 import static l1j.server.server.model.skill.L1SkillId.STATUS_CURSE_BARLOG;
 import static l1j.server.server.model.skill.L1SkillId.STATUS_CURSE_YAHEE;
+import static l1j.server.server.model.skill.L1SkillId.STATUS_ELFBRAVE;
 import static l1j.server.server.model.skill.L1SkillId.STATUS_HASTE;
+import static l1j.server.server.model.skill.L1SkillId.STATUS_RIBRAVE;
+import static l1j.server.server.model.skill.L1SkillId.WIND_WALK;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -38,6 +51,7 @@ import l1j.server.server.ClientThread;
 import l1j.server.server.HomeTownTimeController;
 import l1j.server.server.WarTimeController;
 import l1j.server.server.datatables.CastleTable;
+import l1j.server.server.datatables.CharacterTable;
 import l1j.server.server.datatables.DoorTable;
 import l1j.server.server.datatables.ExpTable;
 import l1j.server.server.datatables.HouseTable;
@@ -56,10 +70,12 @@ import l1j.server.server.model.L1Character;
 import l1j.server.server.model.L1Clan;
 import l1j.server.server.model.L1HauntedHouse;
 import l1j.server.server.model.L1HouseLocation;
+import l1j.server.server.model.L1Inventory;
 import l1j.server.server.model.L1Location;
 import l1j.server.server.model.L1Object;
 import l1j.server.server.model.L1PcInventory;
 import l1j.server.server.model.L1PetMatch;
+import l1j.server.server.model.L1DeathMatch;
 import l1j.server.server.model.L1PolyMorph;
 import l1j.server.server.model.L1Quest;
 import l1j.server.server.model.L1Teleport;
@@ -91,6 +107,7 @@ import l1j.server.server.serverpackets.S_HPUpdate;
 import l1j.server.server.serverpackets.S_HouseMap;
 import l1j.server.server.serverpackets.S_HowManyKey;
 import l1j.server.server.serverpackets.S_ItemName;
+import l1j.server.server.serverpackets.S_Liquor;
 import l1j.server.server.serverpackets.S_MPUpdate;
 import l1j.server.server.serverpackets.S_Message_YN;
 import l1j.server.server.serverpackets.S_NPCTalkReturn;
@@ -105,11 +122,13 @@ import l1j.server.server.serverpackets.S_SellHouse;
 import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.serverpackets.S_ShopBuyList;
 import l1j.server.server.serverpackets.S_ShopSellList;
+import l1j.server.server.serverpackets.S_SkillBrave;
 import l1j.server.server.serverpackets.S_SkillHaste;
 import l1j.server.server.serverpackets.S_SkillIconAura;
 import l1j.server.server.serverpackets.S_SkillSound;
 import l1j.server.server.serverpackets.S_SystemMessage;
 import l1j.server.server.serverpackets.S_TaxRate;
+import l1j.server.server.serverpackets.S_War;
 import l1j.server.server.templates.L1Castle;
 import l1j.server.server.templates.L1House;
 import l1j.server.server.templates.L1Inn;
@@ -183,6 +202,15 @@ public class C_NPCAction extends ClientBasePacket {
 				npc.onFinalAction(pc, s);
 			} else if (obj instanceof L1PcInstance) {
 				target = (L1PcInstance) obj;
+				L1ItemInstance item = null;
+				int steplvl = 0;
+				int[] itemConsumeIds = new int [5];
+				int itemConsumeId = 0;// 單數消耗品
+				int itemConsumeId2 = 0;// 複數消耗品
+				int itemConsumeAmount = 0;// 消耗量
+				for (int i = 0; i < 5; i++) {
+					itemConsumeIds[i]=60023 + i;
+				}
 				if (s.matches("[0-9]+")) {
 					if (target.isSummonMonster()) {
 						summonMonster(target, s);
@@ -201,11 +229,57 @@ public class C_NPCAction extends ClientBasePacket {
 					target.sendPackets(new S_NPCTalkReturn(target.getId(), "filter_listn", msg));
 					return;
 				// 武魂進食清單
-				} else if (s.equalsIgnoreCase("clearFilterList")) { 
-					target.clearFilterList();
+				} else if (s.equalsIgnoreCase("eat")) { 
+					//target.getInventory()
 					String msg[] = { "物品過濾清單已全部清除囉！" };
 					target.sendPackets(new S_NPCTalkReturn(target.getId(), "filter_listn", msg));
 					return;
+				// C級武器兌換卷 by testt
+				}else if (s.equalsIgnoreCase("gets0a")) {
+					steplvl = 1;
+					item = ItemTable.getInstance().createItem(310);
+					itemConsumeId = itemConsumeIds[0];// C級武器兌換券
+				}else if (s.equalsIgnoreCase("gets0b")) {
+					steplvl = 1;
+					item = ItemTable.getInstance().createItem(311);
+					itemConsumeId = itemConsumeIds[0];
+				}else if (s.equalsIgnoreCase("gets0c")) {
+					steplvl = 1;
+					item = ItemTable.getInstance().createItem(312);
+					itemConsumeId = itemConsumeIds[0];
+				}else if (s.equalsIgnoreCase("gets0d")) {
+					steplvl = 1;
+					item = ItemTable.getInstance().createItem(313);
+					itemConsumeId = itemConsumeIds[0];
+				}else if (s.equalsIgnoreCase("gets0e")) {
+					steplvl = 1;
+					item = ItemTable.getInstance().createItem(314);
+					itemConsumeId = itemConsumeIds[0];
+				}else if (s.equalsIgnoreCase("gets0f")) {
+					steplvl = 1;
+					item = ItemTable.getInstance().createItem(315);
+					itemConsumeId = itemConsumeIds[0];
+				}else if (s.equalsIgnoreCase("gets0g")) {
+					steplvl = 1;
+					item = ItemTable.getInstance().createItem(316);
+					itemConsumeId = itemConsumeIds[0];
+				}else if (s.equalsIgnoreCase("gets0h")) {
+					steplvl = 1;
+					item = ItemTable.getInstance().createItem(317);
+					itemConsumeId = itemConsumeIds[0];
+				}
+				// C級武器兌換卷 end
+				// 轉生卷軸 by testt
+				else if (s.equalsIgnoreCase("gold99")) {
+					item = ItemTable.getInstance().createItem(43000);
+					itemConsumeId = 43002;// 轉生卷軸
+					itemConsumeId2 = 60000;// gold幣
+					itemConsumeAmount = 99;// gold幣消耗量
+				} else if (s.equalsIgnoreCase("gold199")) {
+					item = ItemTable.getInstance().createItem(43001);
+					itemConsumeId = 43002;// 轉生卷軸
+					itemConsumeId2 = 60000;// gold幣
+					itemConsumeAmount = 199;// gold幣消耗量
 				}
 				else {
 					int awakeSkillId = target.getAwakeSkillId();
@@ -233,6 +307,11 @@ public class C_NPCAction extends ClientBasePacket {
 							}
 						}
 					}
+				}
+				//兌換卷模組by testt
+				if (item != null && pc.getInventory().checkItem(itemConsumeId)) {
+					storeItem(pc,item,itemConsumeId,itemConsumeId2,itemConsumeAmount,steplvl);
+					target.sendPackets(new S_NPCTalkReturn(target.getId(), ""));
 				}
 				return;
 			}
@@ -304,6 +383,101 @@ public class C_NPCAction extends ClientBasePacket {
 				)
 				&& s.equalsIgnoreCase("ent")) {
 			L1PolyRace.getInstance().enterGame(pc);
+		} else if (s.equalsIgnoreCase("getcoin") && pc.getRemainCoin() != 0 && !pc.isSpecialLogin()) { // 領取GOLD幣by testt
+			L1ItemInstance item = ItemTable.getInstance().createItem(
+					60000);
+			item.setCount(pc.getRemainCoin());
+			pc.updateSupportState();
+			if (item != null) {
+				if (pc.getInventory().checkAddItem(item, pc.getRemainCoin()) == L1Inventory.OK) {
+					pc.getInventory().storeItem(item);
+				} else { // 持てない場合は地面に落とす 處理のキャンセルはしない（不正防止）
+					L1World.getInstance()
+					.getInventory(pc.getX(), pc.getY(),
+							pc.getMapId()).storeItem(item);
+				}
+				pc.sendPackets(new S_ServerMessage(403, item.getLogName())); // 獲得XXX
+			}
+			htmlid = "";
+		} else if (s.equalsIgnoreCase("getreward") && !pc.isfirstSupportReward()) { // 領取首次贊助獎勵by testt
+			L1ItemInstance item = ItemTable.getInstance().createItem(
+					60019);// 首次贊助禮盒
+			if (item != null) {
+				if (pc.getInventory().checkAddItem(item, pc.getRemainCoin()) == L1Inventory.OK) {
+					pc.getInventory().storeItem(item);
+				} else { // 持てない場合は地面に落とす 處理のキャンセルはしない（不正防止）
+					L1World.getInstance()
+					.getInventory(pc.getX(), pc.getY(),
+							pc.getMapId()).storeItem(item);
+				}
+				pc.sendPackets(new S_ServerMessage(403, item.getLogName())); // 獲得XXX
+				pc.isfirstSupportReward(true);
+				pc.isSpecialLogin(true);
+				pc.updateSupportState();
+				pc.isSpecialLogin(false);
+			}
+			htmlid = "";
+		} else if (s.equalsIgnoreCase("gets1") && (pc.getRewardStep() & 1) == 1 && (pc.checkRewardStep() & 1) != 1) { // 領取初出江湖獎勵by testt
+			L1ItemInstance item = ItemTable.getInstance().createItem(
+					60020);// 傳說套裝寶箱
+			storeItem(pc,item,0,0,0,0);
+			item = ItemTable.getInstance().createItem(
+					300002);// A級武魂(普通)
+			storeItem(pc,item,0,0,0,0);
+			item = ItemTable.getInstance().createItem(
+					300007);// 150%經驗符石
+			storeItem(pc,item,0,0,0,0);
+			pc.isSpecialLogin(true);
+			pc.checkRewardStep(1);
+			pc.isSpecialLogin(false);
+			pc.updateSupportState();
+			htmlid = "";
+		} else if (s.equalsIgnoreCase("gets2") && (pc.getRewardStep() & 2) == 2 && (pc.checkRewardStep() & 2) != 2) { // 領取貴人相助獎勵by testt
+			if (pc.checkRewardStep() != 1) {// 尚未領取過初出江湖
+				L1ItemInstance item = ItemTable.getInstance().createItem(
+						60020);// 傳說套裝寶箱
+				storeItem(pc,item,0,0,0,0);
+			}
+			L1ItemInstance item = ItemTable.getInstance().createItem(
+					60018);// 三段加速憑證
+			storeItem(pc,item,0,0,0,0);
+			item = ItemTable.getInstance().createItem(
+					300004);// S級武魂(普通)
+			storeItem(pc,item,0,0,0,0);
+			item = ItemTable.getInstance().createItem(
+					300008);// 200%經驗符石
+			storeItem(pc,item,0,0,0,0);
+			pc.checkRewardStep(3);
+			pc.isSpecialLogin(true);
+			pc.updateSupportState();
+			pc.isSpecialLogin(false);
+			htmlid = "";
+		} else if (s.equalsIgnoreCase("gets4") && (pc.getRewardStep() & 4) == 4 && (pc.checkRewardStep() & 4) != 4) { // 領取飛黃騰達獎勵by testt
+			if (pc.checkRewardStep() != 1) {// 尚未領取過初出江湖
+				L1ItemInstance item = ItemTable.getInstance().createItem(
+						60020);// 傳說套裝寶箱
+				storeItem(pc,item,0,0,0,0);
+			}
+			if (pc.checkRewardStep() != 2) {// 尚未領取過貴人相助
+				L1ItemInstance item = ItemTable.getInstance().createItem(
+						60018);// 三段加速憑證
+				storeItem(pc,item,0,0,0,0);
+			}
+			L1ItemInstance item = ItemTable.getInstance().createItem(
+					300005);// S級武魂(普通)
+			storeItem(pc,item,0,0,0,0);
+			item = ItemTable.getInstance().createItem(
+					300009);// 250%經驗符石
+			storeItem(pc,item,0,0,0,0);
+			item = ItemTable.getInstance().createItem(
+					60052);// B級專屬防具賦予卷軸 * 7
+			item.setCount(7);
+			storeItem(pc,item,0,0,0,0);
+			pc.checkRewardStep(7);
+			pc.isSpecialLogin(true);
+			pc.updateSupportState();
+			pc.isSpecialLogin(false);
+			htmlid = "";
 		} else if (s.equalsIgnoreCase("retrieve")) { // 「個人倉庫：領取物品」
 			if (pc.getLevel() >= 5) {
 				if (client.getAccount().getWarePassword() > 0) {
@@ -408,7 +582,22 @@ public class C_NPCAction extends ClientBasePacket {
 						pc.setPay(0);
 					}
 				}
+			} else 	if (npcId == 150011) { //轉生管理員				
+				if (pc.getQuest().get_step(306) == 0) {
+					L1ItemInstance item1 = ItemTable.getInstance()
+							.createItem(43002); //喘生卷軸
+					item1.setCount(1);
+					if (pc.getInventory().checkAddItem(item1, 1) == L1Inventory.OK) {
+						pc.getInventory().storeItem(item1);
+						pc.sendPackets(new S_ServerMessage(403, item1
+								.getLogName()));
+						pc.getQuest().set_end(306);
+					}
+				} else {
+					htmlid = "gigi_done";
+				}
 			}
+			
 		} else if (s.equalsIgnoreCase("townscore")) {// 確認目前貢獻度
 			L1NpcInstance npc = (L1NpcInstance) obj;
 			int npcId = npc.getNpcTemplate().get_npcId();
@@ -679,6 +868,8 @@ public class C_NPCAction extends ClientBasePacket {
 				htmldata = makeWarTimeStrings(L1CastleLocation.DIAD_CASTLE_ID);
 				htmlid = "dfguard3";
 			}
+//testt		} else if (s.equalsIgnoreCase(testt"declarewar")) {
+//			pc.sendPackets(new S_War(pc.getId()));
 		} else if (s.equalsIgnoreCase("inex")) { // 収入/支出の報告を受ける
 			// 暫定的に公金をチャットウィンドウに表示させる。
 			// メッセージは適当。
@@ -1072,6 +1263,40 @@ public class C_NPCAction extends ClientBasePacket {
 			int npcId = ((L1NpcInstance) obj).getNpcId();
 			if (npcId == 80085) {
 				htmlid = enterHauntedHouse(pc);
+			} else if ((npcId == 80086) || (npcId == 80087)) {
+				int level = pc.getFameLevel();// 角色等級
+					switch (level) {
+					case 1:
+						pc.setDeathId(1);//testt
+						htmlid = enterDeathMatch(pc);
+						//L1Teleport
+						//.teleport(pc, 32657, 32898, (short) 5153, 5, true);
+						//enterDeathMatch(pc);
+						break;
+					case 2:
+						break;
+					case 3:
+						break;
+					case 4:
+						break;
+					case 5:
+						break;
+					case 6:
+						break;
+					case 7:
+						break;
+					case 8:
+						break;
+					case 9:
+						break;
+					case 10:
+						break;
+					case 11:
+						break;
+					case 12:
+						break;				
+					}
+				htmlid = "";
 			} else if (npcId == 80088) {
 				htmlid = enterPetMatch(pc, Integer.valueOf(s2));
 			} else if ((npcId == 50038) || (npcId == 50042) || (npcId == 50029)
@@ -4395,18 +4620,19 @@ public class C_NPCAction extends ClientBasePacket {
 			char s1 = s.charAt(0);
 			switch(s1){
 			case 'b':
-				skills = new int[] {43, 79, 151, 158, 160, 206, 211, 216, 115, 149};                     
+				skills = new int[] {26, 42, 43, 79, 151, 158, 160, 206, 211, 216, 115, 149};                     
 				break;
 			case 'a':
-				skills = new int[] {43, 79, 151, 158, 160, 206, 211, 216, 115, 148};
+				skills = new int[] {26, 42, 43, 79, 151, 158, 160, 206, 211, 216, 115, 148};
 				break;
 			}
 			if (s.equalsIgnoreCase("a") || s.equalsIgnoreCase("b")){
-				if(pc.getInventory().consumeItem(L1ItemId.ADENA,3000)){
+				if(pc.getInventory().consumeItem(L1ItemId.ADENA,30000)){
 					L1SkillUse l1skilluse = new L1SkillUse();
+					basebuff(pc,3600);//將天使祝福移植到輔助魔法師BY TESTT
 					for (int i = 0; i < skills.length; i++) {
 						l1skilluse.handleCommands(pc, 
-								skills[i], pc.getId(), pc.getX(), pc.getY(), null, 0, L1SkillUse.TYPE_GMBUFF);
+								skills[i], pc.getId(), pc.getX(), pc.getY(), null, 3600, L1SkillUse.TYPE_GMBUFF);
 					}
 					htmlid = "bs_done";           
 				} else {
@@ -5058,8 +5284,64 @@ public class C_NPCAction extends ClientBasePacket {
 			} else {
 				htmlid = "dsecret3";
 			}
+		}else if (((L1NpcInstance) obj).getNpcTemplate().get_npcId() == 151101) { // 血盟競技by testt
+			int level = pc.getFameLevel();// 角色等級
+			System.out.println(level);
+			//char s1 = s.charAt(0);
+			if (s.equalsIgnoreCase("clanent")) {
+				//System.out.println(level+1);
+				switch (level) {
+				case 1:
+					L1Teleport
+					.teleport(pc, 33534, 32722, (short) 725, 5, true);
+					break;
+				case 2:
+					break;
+				case 3:
+					break;
+				case 4:
+					break;
+				case 5:
+					break;
+				case 6:
+					break;
+				case 7:
+					break;
+				case 8:
+					break;
+				case 9:
+					break;
+				case 10:
+					break;
+				case 11:
+					break;
+				case 12:
+					break;				
+				}
+			
+			}
+			htmlid = "";
+		}else if (((L1NpcInstance) obj).getNpcTemplate().get_npcId() == 150010) { // 血盟競技by testt
+			if (s.equalsIgnoreCase("A")) {
+				htmlid = "checksupport";
+				String remaincoin = "";
+				String isfirstSupport ="";
+				if (pc.isfirstSupportReward()) {
+					isfirstSupport ="是";
+				}
+				else {
+					isfirstSupport ="否";
+				}
+				
+				remaincoin = Integer.toString(pc.getRemainCoin());
+				if (pc.isSupport()){
+					htmldata = new String[]{ pc.getName(), remaincoin, isfirstSupport };
+				}
+				else {
+					htmlid = "notsupport";
+				}
+			}
 		}
-
 		// else System.out.println("C_NpcAction: " + s);
 		if ((htmlid != null) && htmlid.equalsIgnoreCase("colos2")) {
 			htmldata = makeUbInfoStrings(((L1NpcInstance) obj).getNpcTemplate()
@@ -5197,7 +5479,7 @@ public class C_NPCAction extends ClientBasePacket {
 	private String enterUb(L1PcInstance pc, int npcId) {
 		L1UltimateBattle ub = UBTable.getInstance().getUbForNpcId(npcId);
 		if (!ub.isActive() || !ub.canPcEnter(pc)) { // 時間外
-			//return "colos2";時間外也可參加 by testt
+			return "colos2";
 		}
 		if (ub.isNowUb()) { // 競技中也可參加by testt
 			//return "colos1";
@@ -5219,7 +5501,7 @@ public class C_NPCAction extends ClientBasePacket {
 		else{
 			L1Teleport.teleport(pc, loc.getX(), loc.getY(), ub.getMapId(), 5, true);	
 		}
-				return "";
+		return "";
 	}
 
 	private String enterHauntedHouse(L1PcInstance pc) {
@@ -5243,6 +5525,13 @@ public class C_NPCAction extends ClientBasePacket {
 			return "";
 		}
 		if (!L1PetMatch.getInstance().enterPetMatch(pc, objid2)) {
+			pc.sendPackets(new S_ServerMessage(1182)); // もうゲームは始まってるよ。
+		}
+		return "";
+	}
+	
+	private String enterDeathMatch(L1PcInstance pc) {
+		if (!L1DeathMatch.getInstance().enterDeathMatch(pc)) {
 			pc.sendPackets(new S_ServerMessage(1182)); // もうゲームは始まってるよ。
 		}
 		return "";
@@ -5998,7 +6287,166 @@ public class C_NPCAction extends ClientBasePacket {
 		}
 		return isUseItem;
 	}
+	
+	//取得贊助資訊by testt
+	//public void getSupportState(L1PcInstance pc, L1NpcInstance npc,
+	//		String s){
+	//	htmlid = "wdguard6";
+		
+	//}
+	//取得贊助資訊end by testt
+	
+	//將天使祝福移植到輔助魔法師BY TESTT
+	public void basebuff(L1PcInstance pc, int time){
 
+
+		// アブソルート バリアの解除
+		if (pc.hasSkillEffect(ABSOLUTE_BARRIER)) {
+			pc.killSkillEffectTimer(ABSOLUTE_BARRIER);
+			pc.startHpRegeneration();
+			pc.startMpRegeneration();
+			pc.startMpRegenerationByDoll();
+		}
+		// 勇水
+		if (pc.hasSkillEffect(STATUS_ELFBRAVE)) { // エルヴンワッフルとは重複しない
+			pc.killSkillEffectTimer(STATUS_ELFBRAVE);
+			pc.sendPackets(new S_SkillBrave(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillBrave(pc.getId(), 0, 0));
+			pc.setBraveSpeed(0);
+		}
+		if (pc.hasSkillEffect(HOLY_WALK)) { // ホーリーウォークとは重複しない
+			pc.killSkillEffectTimer(HOLY_WALK);
+			pc.sendPackets(new S_SkillBrave(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillBrave(pc.getId(), 0, 0));
+			pc.setBraveSpeed(0);
+		}
+		if (pc.hasSkillEffect(MOVING_ACCELERATION)) { // ムービングアクセレーションとは重複しない
+			pc.killSkillEffectTimer(MOVING_ACCELERATION);
+			pc.sendPackets(new S_SkillBrave(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillBrave(pc.getId(), 0, 0));
+			pc.setBraveSpeed(0);
+		}
+		if (pc.hasSkillEffect(WIND_WALK)) { // ウィンドウォークとは重複しない
+			pc.killSkillEffectTimer(WIND_WALK);
+			pc.sendPackets(new S_SkillBrave(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillBrave(pc.getId(), 0, 0));
+			pc.setBraveSpeed(0);
+		}
+		if (pc.hasSkillEffect(STATUS_RIBRAVE)) { // ユグドラの実とは重複しない
+			pc.killSkillEffectTimer(STATUS_RIBRAVE);
+			// XXX ユグドラの実のアイコンを消す方法が不明s
+			pc.setBraveSpeed(0);
+		}
+		if (pc.hasSkillEffect(STATUS_THIRD_SPEED)) { // 三段加速by testt
+			pc.killSkillEffectTimer(STATUS_THIRD_SPEED);
+			// XXX 三段加速by testt
+			pc.sendPackets(new S_Liquor(pc.getId(), 0)); // 清除三段加速
+			pc.broadcastPacket(new S_Liquor(pc.getId(), 0)); // 清除三段加速
+		}
+		pc.sendPackets(new S_SkillBrave(pc.getId(), 1, time));
+		pc.broadcastPacket(new S_SkillBrave(pc.getId(), 1, 0));
+		pc.sendPackets(new S_SkillSound(pc.getId(), 751));
+		pc.broadcastPacket(new S_SkillSound(pc.getId(), 751));
+		pc.setSkillEffect(STATUS_BRAVE, time * 1000);
+		pc.setBraveSpeed(1);
+		if (pc.getInventory().checkItem(60018)) {// 60018=>三段加速憑證
+			L1BuffUtil.thirdSpeed(pc, time);// 三段加速by testt
+		}		
+		// 綠水
+		// 酔った状態を解除
+		pc.setDrink(false);
+
+		// ヘイスト、グレーターヘイストとは重複しない
+		if (pc.hasSkillEffect(HASTE)) {
+			pc.killSkillEffectTimer(HASTE);
+			pc.sendPackets(new S_SkillHaste(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillHaste(pc.getId(), 0, 0));
+			pc.setMoveSpeed(0);
+		} else if (pc.hasSkillEffect(GREATER_HASTE)) {
+			pc.killSkillEffectTimer(GREATER_HASTE);
+			pc.sendPackets(new S_SkillHaste(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillHaste(pc.getId(), 0, 0));
+			pc.setMoveSpeed(0);
+		} else if (pc.hasSkillEffect(STATUS_HASTE)) {
+			pc.killSkillEffectTimer(STATUS_HASTE);
+			pc.sendPackets(new S_SkillHaste(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillHaste(pc.getId(), 0, 0));
+			pc.setMoveSpeed(0);
+		}
+
+		// スロー、マス スロー、エンタングル中はスロー状態を解除するだけ
+		pc.removeHasteSkillEffect();
+		pc.setMoveSpeed(0);
+		if (pc.hasSkillEffect(SLOW)) { // スロー
+			pc.killSkillEffectTimer(SLOW);
+			pc.sendPackets(new S_SkillHaste(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillHaste(pc.getId(), 0, 0));
+		} else if (pc.hasSkillEffect(MASS_SLOW)) { // マス スロー
+			pc.killSkillEffectTimer(MASS_SLOW);
+			pc.sendPackets(new S_SkillHaste(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillHaste(pc.getId(), 0, 0));
+		} else if (pc.hasSkillEffect(ENTANGLE)) { // エンタングル
+			pc.killSkillEffectTimer(ENTANGLE);
+			pc.sendPackets(new S_SkillHaste(pc.getId(), 0, 0));
+			pc.broadcastPacket(new S_SkillHaste(pc.getId(), 0, 0));
+		} else if (pc.getMoveSpeed() != 1 && pc.getHasteItemEquipped() == 1) {
+				pc.setMoveSpeed(1);
+				pc.sendPackets(new S_SkillHaste(pc.getId(), 1, -1));
+				pc.broadcastPacket(new S_SkillHaste(pc.getId(), 1, 0));
+		} else {
+			pc.sendPackets(new S_SkillHaste(pc.getId(), 1, time));
+			pc.broadcastPacket(new S_SkillHaste(pc.getId(), 1, 0));
+			pc.setMoveSpeed(1);
+			pc.setSkillEffect(STATUS_HASTE, time * 1000);
+		}
+
+	}
+
+	private static void storeItem(L1PcInstance pc, L1ItemInstance item, int itemConsumeId, int itemConsumeId2, int itemConsumeAmount, int steplvl) {
+		L1Inventory inventory;
+		short check = 0;
+		
+		if (pc.getInventory().checkAddItem(item, item.getCount()) == L1Inventory.OK) {
+			inventory = pc.getInventory();
+		} else {
+			// 持てない場合は地面に落とす 処理のキャンセルはしない（不正防止）
+			inventory = L1World.getInstance().getInventory(pc.getLocation());
+		}
+		if (steplvl != 0) {
+			item.setStepLevel(steplvl);
+		}		
+		if (itemConsumeId != 0) {
+			if (inventory.checkItem(itemConsumeId)) {
+				check += 1;
+			} else {
+				return;
+			}
+		} else {
+			check += 1;
+		}
+		if (itemConsumeId2 != 0) {
+			if (itemConsumeAmount == 0)
+				itemConsumeAmount = 1;
+			if (inventory.checkItem(itemConsumeId2)) {
+				check += 1;
+			} else {
+				return;
+			}
+		} else {
+			check += 1;
+		}
+		if (check == 2) {
+			if (itemConsumeId != 0)
+				inventory.consumeItem(itemConsumeId, 1);
+			if (itemConsumeAmount == 0)
+				itemConsumeAmount = 1;
+			if (itemConsumeId2 != 0)
+				inventory.consumeItem(itemConsumeId, itemConsumeAmount);
+			inventory.storeItem(item);
+			pc.sendPackets(new S_ServerMessage(403, item.getLogName())); // %0を手に入れました。
+		}	
+	}
+	
 	@Override
 	public String getType() {
 		return C_NPC_ACTION;

@@ -36,16 +36,37 @@ public class S_OtherCharPacks extends ServerBasePacket {
 
 	private byte[] _byte = null;
 
+
+	public S_OtherCharPacks(L1PcInstance pc, boolean isFindInvis, int clanid) {
+		buildPacket(pc, isFindInvis, clanid);
+	}
+	
 	public S_OtherCharPacks(L1PcInstance pc, boolean isFindInvis) {
-		buildPacket(pc, isFindInvis);
+		buildPacket(pc, isFindInvis, 0);
 	}
 
 	public S_OtherCharPacks(L1PcInstance pc) {
-		buildPacket(pc, false);
+		buildPacket(pc, false, 0);
 	}
 
-	private void buildPacket(L1PcInstance pc, boolean isFindInvis) {
+	private void buildPacket(L1PcInstance pc, boolean isFindInvis, int clanid) {
 		int status = STATUS_PC;
+
+		//在戰場地圖中所有不同血盟的人都將成為敵人 by testt
+		switch (pc.getMapId()) {
+		case 725:
+		case 726:
+			if ((pc.getClanid() != clanid) || pc.getClanid()==0) {
+				status = 0;
+			}
+			break;
+		default:
+			if (pc.getMapId() >= 5153 && pc.getMapId() <= 5164){
+				status = 0;
+			}
+			break;
+		}
+		//在戰場地圖中所有不同血盟的人都將成為敵人 end by testt
 		
 		// sosodemon add 聲望系統 BY.SosoDEmoN
 		String FameName = "";
@@ -99,7 +120,91 @@ public class S_OtherCharPacks extends ServerBasePacket {
 			writeH(pc.getTempCharGfxAtDead());
 		}
 		else {
-			writeH(pc.getTempCharGfx());
+			//在盟戰地圖中所有不同血盟的人都將成為敵人 by testt
+			int polyId = 0;
+			switch (pc.getMapId()) {
+			case 725:
+			case 726:
+				if ((pc.get_sex() == 0) && pc.isCrown()) { // 夏納的變身卷軸(等級70)
+					polyId = 6882;
+				} else if ((pc.get_sex() == 1) && pc.isCrown()) {
+					polyId = 6883;
+				} else if ((pc.get_sex() == 0) && pc.isKnight()) {
+					polyId = 6884;
+				} else if ((pc.get_sex() == 1) && pc.isKnight()) {
+					polyId = 6885;
+				} else if ((pc.get_sex() == 0) && pc.isElf()) {
+					polyId = 6886;
+				} else if ((pc.get_sex() == 1) && pc.isElf()) {
+					polyId = 6887;
+				} else if ((pc.get_sex() == 0) && pc.isWizard()) {
+					polyId = 6888;
+				} else if ((pc.get_sex() == 1) && pc.isWizard()) {
+					polyId = 6889;
+				} else if ((pc.get_sex() == 0) && pc.isDarkelf()) {
+					polyId = 6890;
+				} else if ((pc.get_sex() == 1) && pc.isDarkelf()) {
+					polyId = 6891;
+				} else if ((pc.get_sex() == 0)
+						&& pc.isDragonKnight()) {
+					polyId = 7163;
+				} else if ((pc.get_sex() == 1)
+						&& pc.isDragonKnight()) {
+					polyId = 7164;
+				} else if ((pc.get_sex() == 0)
+						&& pc.isIllusionist()) {
+					polyId = 7165;
+				} else if ((pc.get_sex() == 1)
+						&& pc.isIllusionist()) {
+					polyId = 7166;
+				}
+				writeH(polyId);//經過測試需要變身方可直接攻擊				
+				break;
+			default:
+				if (pc.getMapId() >= 5153 && pc.getMapId() <= 5164){
+					if ((pc.get_sex() == 0) && pc.isCrown()) { // 夏納的變身卷軸(等級70)
+						polyId = 6882;
+					} else if ((pc.get_sex() == 1) && pc.isCrown()) {
+						polyId = 6883;
+					} else if ((pc.get_sex() == 0) && pc.isKnight()) {
+						polyId = 6884;
+					} else if ((pc.get_sex() == 1) && pc.isKnight()) {
+						polyId = 6885;
+					} else if ((pc.get_sex() == 0) && pc.isElf()) {
+						polyId = 6886;
+					} else if ((pc.get_sex() == 1) && pc.isElf()) {
+						polyId = 6887;
+					} else if ((pc.get_sex() == 0) && pc.isWizard()) {
+						polyId = 6888;
+					} else if ((pc.get_sex() == 1) && pc.isWizard()) {
+						polyId = 6889;
+					} else if ((pc.get_sex() == 0) && pc.isDarkelf()) {
+						polyId = 6890;
+					} else if ((pc.get_sex() == 1) && pc.isDarkelf()) {
+						polyId = 6891;
+					} else if ((pc.get_sex() == 0)
+							&& pc.isDragonKnight()) {
+						polyId = 7163;
+					} else if ((pc.get_sex() == 1)
+							&& pc.isDragonKnight()) {
+						polyId = 7164;
+					} else if ((pc.get_sex() == 0)
+							&& pc.isIllusionist()) {
+						polyId = 7165;
+					} else if ((pc.get_sex() == 1)
+							&& pc.isIllusionist()) {
+						polyId = 7166;
+					}
+					writeH(polyId);//經過測試需要變身方可直接攻擊	
+				}
+				else{
+					writeH(pc.getTempCharGfx());
+				}
+				break;
+			}
+			//在戰場地圖中所有不同血盟的人都將成為敵人 end by testt
+			
+			//*writeH(pc.getTempCharGfx());*//原始程式碼
 		}
 		if (pc.isDead()) {
 			writeC(pc.getStatus());
@@ -128,6 +233,8 @@ public class S_OtherCharPacks extends ServerBasePacket {
 		writeS(pc.getClanname()); // クラン名
 		writeS(null); // ペッホチング？
 		writeC(0); // ？
+
+
 		/*
 		 * if(pc.is_isInParty()) // パーティー中 { writeC(100 * pc.get_currentHp() /
 		 * pc.get_maxHp()); } else { writeC(0xFF); }
@@ -139,7 +246,9 @@ public class S_OtherCharPacks extends ServerBasePacket {
 		} else {
 			writeC(0);
 		}
-		writeC(0); // PC = 0, Mon = Lv
+
+		writeC(pc.getLevel()); // PC = 0, Mon = Lv
+
 		writeC(0); // ？
 		writeC(0xFF);
 		writeC(0xFF);

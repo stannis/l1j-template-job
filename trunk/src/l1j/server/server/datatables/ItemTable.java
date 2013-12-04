@@ -369,7 +369,7 @@ public class ItemTable {
 				weapon.setMaxUseTime(rs.getInt("max_use_time"));
 				weapon.setDelete_Day(rs.getInt("delete_day")); // 道具天數刪除系統(指定天數)
 				weapon.setDelete_Date(rs.getTimestamp("delete_date")); // 道具天數刪除系統(指定日期)
-
+				
 				result.put(new Integer(weapon.getItemId()), weapon);
 			}
 		}

@@ -112,6 +112,11 @@ public class MpRegeneration extends TimerTask {
 			//baseMpr += 3;
 			baseMpr += Config.Mpr_UnderTheTree; // [妖森大樹下]回魔量
 		}
+		if ((_pc.getLocation().isInScreen(new Point(32771,32825)))
+				&& (_pc.getMapId() == 610)) {
+			//baseMpr += 3;
+			baseMpr += Config.Mpr_UnderTheTree; // [廣場櫻花樹下]回血量 by testt
+		}
 		if (_pc.hasSkillEffect(COOKING_1_2_N) || _pc.hasSkillEffect(COOKING_1_2_S)) {
 			baseMpr += 3;
 		}
@@ -145,6 +150,10 @@ public class MpRegeneration extends TimerTask {
 		// 重量オーバーでは無いとみなす。
 		if (pc.hasSkillEffect(EXOTIC_VITALIZE) || pc.hasSkillEffect(ADDITIONAL_FIRE)) {
 			return false;
+		}
+		if ((_pc.getLocation().isInScreen(new Point(32771,32825))
+				&& _pc.getMapId() == 610)) {
+			return false;// [廣場櫻花樹下]負重回魔 by testt
 		}
 
 		return (120 <= pc.getInventory().getWeight242()) ? true : false;

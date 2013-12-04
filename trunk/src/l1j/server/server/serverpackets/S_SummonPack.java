@@ -61,7 +61,7 @@ public class S_SummonPack extends ServerBasePacket {
 		writeD(0);
 		writeS(null);
 		if (isCheckMaster && pet.isExsistMaster()) {
-			writeS(pet.getMaster().getName());
+			writeS(pet.getMaster().getName()+pc.getFamename());//fix by testt
 		}
 		else {
 			writeS("");

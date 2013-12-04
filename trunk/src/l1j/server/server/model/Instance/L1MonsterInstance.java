@@ -18,6 +18,7 @@ import static l1j.server.server.model.skill.L1SkillId.EFFECT_BLOODSTAIN_OF_ANTHA
 import static l1j.server.server.model.skill.L1SkillId.FOG_OF_SLEEPING;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +27,7 @@ import l1j.server.server.ActionCodes;
 import l1j.server.server.GeneralThreadPool;
 import l1j.server.server.IdFactory;
 import l1j.server.server.datatables.DropTable;
+import l1j.server.server.datatables.ItemTable;
 import l1j.server.server.datatables.NPCTalkDataTable;
 import l1j.server.server.datatables.NpcTable;
 import l1j.server.server.datatables.SprTable;
@@ -33,10 +35,11 @@ import l1j.server.server.datatables.UBTable;
 import l1j.server.server.model.L1Attack;
 import l1j.server.server.model.L1Character;
 import l1j.server.server.model.L1DragonSlayer;
+import l1j.server.server.model.L1Inventory;
 import l1j.server.server.model.L1Location;
 import l1j.server.server.model.L1NpcTalkData;
 import l1j.server.server.model.L1Object;
-import l1j.server.server.model.L1UltimateBattle;
+import l1j.server.server.model.L1UltimateBattle;//追憶之島boss死亡判斷by testt
 import l1j.server.server.model.L1World;
 import l1j.server.server.model.skill.L1BuffUtil;
 import l1j.server.server.serverpackets.S_ChangeName;
@@ -48,6 +51,7 @@ import l1j.server.server.serverpackets.S_NpcChangeShape;
 import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.serverpackets.S_SkillBrave;
 import l1j.server.server.serverpackets.S_HPMeter;// 怪物血條判斷功能 語法來源99NETS网游模拟娱乐社区
+import l1j.server.server.serverpackets.S_SystemMessage;
 import l1j.server.server.templates.L1Npc;
 import l1j.server.server.utils.CalcExp;
 import l1j.server.server.utils.Random;
@@ -586,6 +590,48 @@ public class L1MonsterInstance extends L1NpcInstance {
 			if (isDead()) {
 				distributeDrop();
 				giveKarma(pc);
+				//在追憶之島對boss最後一擊有額外獎勵 by testt
+				if (pc.getMapId() == 701){
+					switch (getNpcId()){
+					case 152001:
+					case 152002:						
+					case 152003:
+						if (getNpcId() == 152003){
+							L1UltimateBattle.Bossdie();
+						}						
+					case 152004:
+						if (getNpcId() == 152004){
+							L1UltimateBattle.Bossdie();
+						}					
+					L1ItemInstance item = ItemTable.getInstance().createItem(
+							40308);
+					item.setCount(1000000);
+					if (item != null) {
+						if (pc.getInventory().checkAddItem(item, 1000000) == L1Inventory.OK) {
+							pc.getInventory().storeItem(item);
+						} else { // 持てない場合は地面に落とす 處理のキャンセルはしない（不正防止）
+							L1World.getInstance()
+							.getInventory(pc.getX(), pc.getY(),
+									pc.getMapId()).storeItem(item);
+						}
+						pc.sendPackets(new S_ServerMessage(403, item
+								.getLogName())); // 得到多少金幣
+						Collection<L1PcInstance> AllPlayer = L1World.getInstance().getAllPlayers();
+						for (L1PcInstance apc : AllPlayer)
+							apc.sendPackets(new S_SystemMessage(pc.getName()+"給了Boss最後一擊，取走了獎勵，請各位也要有風度的為他喝采歐!!"));
+					}
+					//追憶之島boss死亡判斷by testt
+					if ((getNpcId() == 152003) || (getNpcId() == 152004)){
+						if (L1UltimateBattle.get_checkBossdie()==2){
+							L1UltimateBattle.setBossdie(true);
+						}
+					}
+					else{
+						L1UltimateBattle.setBossdie(true);
+					}					
+					}										
+				}
+				//在追憶之島對boss最後一擊有額外獎勵 end by testt
 			}
 		} else if (lastAttacker instanceof L1EffectInstance) { // FWが倒した場合
 			ArrayList<L1Character> targetList = _hateList.toTargetArrayList();
@@ -616,6 +662,48 @@ public class L1MonsterInstance extends L1NpcInstance {
 					if (isDead()) {
 						distributeDrop();
 						giveKarma(pc);
+						//在追憶之島對boss最後一擊有額外獎勵 by testt
+						if (pc.getMapId() == 701){
+							switch (getNpcId()){
+							case 152001:
+							case 152002:						
+							case 152003:
+								if (getNpcId() == 152003){
+									L1UltimateBattle.Bossdie();
+								}						
+							case 152004:
+								if (getNpcId() == 152004){
+									L1UltimateBattle.Bossdie();
+								}					
+							L1ItemInstance item = ItemTable.getInstance().createItem(
+									40308);
+							item.setCount(1000000);
+							if (item != null) {
+								if (pc.getInventory().checkAddItem(item, 1000000) == L1Inventory.OK) {
+									pc.getInventory().storeItem(item);
+								} else { // 持てない場合は地面に落とす 處理のキャンセルはしない（不正防止）
+									L1World.getInstance()
+									.getInventory(pc.getX(), pc.getY(),
+											pc.getMapId()).storeItem(item);
+								}
+								pc.sendPackets(new S_ServerMessage(403, item
+										.getLogName())); // 得到多少金幣
+								Collection<L1PcInstance> AllPlayer = L1World.getInstance().getAllPlayers();
+								for (L1PcInstance apc : AllPlayer)									
+									apc.sendPackets(new S_SystemMessage(pc.getName()+"給了Boss最後一擊，取走了獎勵，請各位也要有風度的為他喝采歐!!"));
+							}
+							//追憶之島boss死亡判斷by testt
+							if ((getNpcId() == 152003) || (getNpcId() == 152004)){
+								if (L1UltimateBattle.get_checkBossdie()==2){
+									L1UltimateBattle.setBossdie(true);
+								}
+							}
+							else{
+								L1UltimateBattle.setBossdie(true);
+							}					
+							}										
+						}
+						//在追憶之島對boss最後一擊有額外獎勵 end by testt
 					}
 				}
 			}

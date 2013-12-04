@@ -668,4 +668,16 @@ public class L1Npc extends L1Object implements Cloneable {
 	public void setCantResurrect(boolean isCantResurrect) {
 		_isCantResurrect = isCantResurrect;
 	}
+
+	//新增城堡判斷 by testt
+	
+	private short _castle;
+
+	public short getCastle() {
+		return _castle;
+	}
+	
+	public void setCastle(short i) {
+		_castle = i;
+	}
 }

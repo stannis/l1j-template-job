@@ -264,9 +264,47 @@ public class L1PolyMorph {
 				pc.sendPackets(new S_ChangeShape(pc.getId(), polyId, pc.getCurrentWeapon()));
 				if (pc.isGmInvis()) { // GM隱身
 				} else if (pc.isInvisble()) { // 一般隱身
-					pc.broadcastPacketForFindInvis(new S_ChangeShape(pc.getId(), polyId, pc.getCurrentWeapon()), true);
+					switch (pc.getMapId()) {//戰場地圖中變身不改變外型 by testt
+					case 725:
+					case 726:
+					case 5153:
+					case 5154:
+					case 5155:
+					case 5156:
+					case 5157:
+					case 5158:
+					case 5159:
+					case 5160:
+					case 5161:
+					case 5162:
+					case 5163:
+					case 5164:
+						break;
+					default:
+						pc.broadcastPacketForFindInvis(new S_ChangeShape(pc.getId(), polyId, pc.getCurrentWeapon()), true);
+						break;
+					}
 				} else {
-					pc.broadcastPacket(new S_ChangeShape(pc.getId(), polyId, pc.getCurrentWeapon()));
+					switch (pc.getMapId()) {//戰場地圖中變身不改變外型 by testt
+					case 725:
+					case 726:
+					case 5153:
+					case 5154:
+					case 5155:
+					case 5156:
+					case 5157:
+					case 5158:
+					case 5159:
+					case 5160:
+					case 5161:
+					case 5162:
+					case 5163:
+					case 5164:
+						break;
+					default:
+						pc.broadcastPacket(new S_ChangeShape(pc.getId(), polyId, pc.getCurrentWeapon()));
+						break;
+					}
 				}
 				pc.getInventory().takeoffEquip(polyId); // 是否將裝備的武器強制解除。
 			}
@@ -304,7 +342,26 @@ public class L1PolyMorph {
 			pc.setTempCharGfx(classId);
 			if (!pc.isDead()) {
 				pc.sendPackets(new S_ChangeShape(pc.getId(), classId, pc.getCurrentWeapon()));
-				pc.broadcastPacket(new S_ChangeShape(pc.getId(), classId, pc.getCurrentWeapon()));
+				switch (pc.getMapId()) {//戰場地圖中變身不改變外型 by testt
+				case 725:
+				case 726:
+				case 5153:
+				case 5154:
+				case 5155:
+				case 5156:
+				case 5157:
+				case 5158:
+				case 5159:
+				case 5160:
+				case 5161:
+				case 5162:
+				case 5163:
+				case 5164:
+					break;
+				default:
+					pc.broadcastPacket(new S_ChangeShape(pc.getId(), classId, pc.getCurrentWeapon()));
+					break;
+				}	
 			}
 		} else if (cha instanceof L1MonsterInstance) {
 			L1MonsterInstance mob = (L1MonsterInstance) cha;

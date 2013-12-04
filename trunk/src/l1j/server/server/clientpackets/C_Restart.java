@@ -23,6 +23,7 @@ import l1j.server.server.serverpackets.S_MapID;
 import l1j.server.server.serverpackets.S_OtherCharPacks;
 import l1j.server.server.serverpackets.S_OwnCharPack;
 import l1j.server.server.serverpackets.S_RemoveObject;
+import l1j.server.server.serverpackets.S_SkillHaste;
 import l1j.server.server.serverpackets.S_Weather;
 
 // Referenced classes of package l1j.server.server.clientpackets:
@@ -60,6 +61,13 @@ public class C_Restart extends ClientBasePacket {
 		pc.removeAllKnownObjects();
 		pc.broadcastPacket(new S_RemoveObject(pc));
 
+		// 角色死亡重置後新增加速道具的處理BY TESTT
+		pc.removeHasteSkillEffect();
+		if (pc.getMoveSpeed() != 1 && pc.getHasteItemEquipped() == 1) {
+			pc.setMoveSpeed(1);
+			pc.sendPackets(new S_SkillHaste(pc.getId(), 1, -1));
+			pc.broadcastPacket(new S_SkillHaste(pc.getId(), 1, 0));
+		}
 		pc.setCurrentHp(pc.getLevel());
 		pc.set_food(40);
 		pc.setDead(false);

@@ -137,6 +137,11 @@ public class HpRegeneration extends TimerTask {
 			//bonus += 5;
 			bonus += Config.Hpr_UnderTheTree; // [妖森大樹下]回血量
 		}
+		if ((_pc.getLocation().isInScreen(new Point(32771,32825))
+				&& _pc.getMapId() == 610)) {
+			//bonus += 5;
+			bonus += Config.Hpr_UnderTheTree; // [廣場櫻花樹下]回血量 by testt
+		}
  		if (_pc.hasSkillEffect(COOKING_1_5_N)
 				|| _pc.hasSkillEffect(COOKING_1_5_S)) {
 			bonus += 3;
@@ -240,6 +245,10 @@ public class HpRegeneration extends TimerTask {
 		}
 		if (pc.getInventory().checkEquipped(20049)) {
 			return false;
+		}
+		if ((_pc.getLocation().isInScreen(new Point(32771,32825))
+				&& _pc.getMapId() == 610)) {
+			return false;// [廣場櫻花樹下]負重回血 by testt
 		}
 
 		return (121 <= pc.getInventory().getWeight242()) ? true : false;

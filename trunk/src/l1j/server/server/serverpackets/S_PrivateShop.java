@@ -40,6 +40,11 @@ public class S_PrivateShop extends ServerBasePacket {
 		writeD(objectId);
 
 		if (type == 0) {
+			//新增限定等級交易防創角色洗錢判斷by testt
+			if (pc.getMaxLvl() < 60) {
+				pc.sendPackets(new S_ServerMessage(166,"只有累積等級達60的老手才可以開始個人商店的購買"));
+				return;
+			}
 			List<L1PrivateShopSellList> list = shopPc.getSellList();
 			int size = list.size();
 			pc.setPartnersPrivateShopItemCount(size);

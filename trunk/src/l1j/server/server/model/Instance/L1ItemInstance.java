@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat; // 道具天數刪除系統
 import l1j.server.server.datatables.NpcTable;
 import l1j.server.server.datatables.PetItemTable;
 import l1j.server.server.datatables.PetTable;
+import l1j.server.server.model.L1Attack;
 import l1j.server.server.model.L1EquipmentTimer;
 import l1j.server.server.model.L1ItemOwnerTimer;
 import l1j.server.server.model.L1Object;
@@ -54,6 +55,10 @@ public class L1ItemInstance extends L1Object {
 	private L1Item _item;
 
 	private boolean _isEquipped = false;
+	
+	private int _itemLevel;//武器防具等級 by testt
+	
+	private int _stepLevel;//武器防具階級by testt
 
 	private int _enchantLevel;
 
@@ -180,6 +185,24 @@ public class L1ItemInstance extends L1Object {
 	public void onAction(L1PcInstance player) {
 	}
 
+	//武器等級 by testt
+	public int getItemLevel() {
+		return _itemLevel;
+	}
+	
+	public void setItemLevel(int itemLevel) {
+		_itemLevel = itemLevel;
+	}
+	
+	//武器階級by testt
+	public int getStepLevel() {
+		return _stepLevel;
+	}
+	
+	public void setStepLevel(int stepLevel) {
+		_stepLevel = stepLevel;
+	}
+	
 	public int getEnchantLevel() {
 		return _enchantLevel;
 	}
@@ -303,6 +326,10 @@ public class L1ItemInstance extends L1Object {
 		public boolean isEquipped = false;
 
 		public int enchantLevel;
+		
+		public int itemLevel;//武器防具等級by testt
+		
+		public int stepLevel;//武器防具階級by testt
 
 		public boolean isIdentified = true;
 
@@ -348,6 +375,8 @@ public class L1ItemInstance extends L1Object {
 			isEquipped = isEquipped();
 			isIdentified = isIdentified();
 			enchantLevel = getEnchantLevel();
+			itemLevel = getItemLevel();//武器等級by testt
+			stepLevel = getStepLevel();//武器階級by testt
 			durability = get_durability();
 			chargeCount = getChargeCount();
 			remainingTime = getRemainingTime();
@@ -386,6 +415,14 @@ public class L1ItemInstance extends L1Object {
 
 		public void updateEnchantLevel() {
 			enchantLevel = getEnchantLevel();
+		}
+		
+		public void updateItemLevel() {//裝備等級by testt
+			itemLevel = getItemLevel();
+		}
+		
+		public void updateStepLevel() {//裝備階級by testt
+			stepLevel = getStepLevel();
 		}
 
 		public void updateDuraility() {
@@ -507,6 +544,9 @@ public class L1ItemInstance extends L1Object {
 		}
 		if (getAttrEnchantLevel() != _lastStatus.attrEnchantLevel) {
 			column += L1PcInventory.COL_ATTR_ENCHANT_LEVEL;
+		}
+		if (getItemLevel() != _lastStatus.itemLevel) {//武器等級by testt
+			column += L1PcInventory.COL_ITEM_ENCHANT_LEVEL;
 		}
 
 		return column;
@@ -676,7 +716,32 @@ public class L1ItemInstance extends L1Object {
 				} else if (getEnchantLevel() < 0) {
 					name.append(String.valueOf(getEnchantLevel()) + " ");
 				}
+				//武器防具等級顯示 by testt
+				if (getItemLevel() >= 0) {
+					name.append("Lv" + getItemLevel() + " ");
+				}
+				//武器防具等級顯示 end by testt
+				
+				//角色專屬武器防具及武器防具階級顯示 by testt
+				if (getStepLevel() > 0) {
+					switch (getStepLevel()) {
+					case 1://C級
+						name.append("C級 ");
+						break;
+					case 2://B級
+						name.append("B級 ");
+						break;
+					case 3://A級
+						name.append("A級 ");
+						break;
+					case 4://S級
+						name.append("S級 ");
+						break;
+					}
+				}
+				//角色專屬武器防具及武器防具階級顯示  end by testt
 			}
+			
 		}
 		if (isIdentified()) {
 			name.append(_item.getIdentifiedNameId());
@@ -831,8 +896,14 @@ public class L1ItemInstance extends L1Object {
 			if (itemType2 == 1) { // weapon
 				// 打撃値
 				os.writeC(1);
-				os.writeC(getItem().getDmgSmall());
-				os.writeC(getItem().getDmgLarge());
+				if (getItem().getType1() == 20) {//弓傷害修正不顯示by testt
+					os.writeC(getItem().getDmgSmall());
+					os.writeC(getItem().getDmgLarge());
+				}
+				else {
+					os.writeC(getItem().getDmgSmall()+ L1Attack.weaponlvlDmgSmall[getStepLevel()][getItemLevel()]);//武器等級小怪傷害修正by testt
+					os.writeC(getItem().getDmgLarge()+ L1Attack.weaponlvlDmgLarge[getStepLevel()][getItemLevel()]);//武器等級大怪傷害修正by testt
+				}
 				os.writeC(getItem().getMaterial());
 				os.writeD(getWeight());
 			} else if (itemType2 == 2) { // armor
@@ -870,9 +941,10 @@ public class L1ItemInstance extends L1Object {
 			}
 			// 攻撃成功
 			if (itemType2 == 1) { // weapon
-				if (getItem().getHitModifier() != 0) {
+				if (getItem().getHitModifier() != 0 || getItemLevel() !=0) {
 					os.writeC(5);
-					os.writeC(getItem().getHitModifier());
+					os.writeC(getItem().getHitModifier()+ L1Attack.weaponlvlHit[getStepLevel()][getItemLevel()]);
+					//武器等級命中修正by testt
 				}
 			} else if (itemType2 == 2) { // armor
 				if (getItem().getHitModifierByArmor() != 0) {
@@ -882,9 +954,10 @@ public class L1ItemInstance extends L1Object {
 			}
 			// 追加打撃
 			if (itemType2 == 1) { // weapon
-				if (getItem().getDmgModifier() != 0) {
+				if (getItem().getDmgModifier() != 0 || getItemLevel() != 0) {
 					os.writeC(6);
-					os.writeC(getItem().getDmgModifier());
+					os.writeC(getItem().getDmgModifier() + L1Attack.weaponlvlDmg[getStepLevel()][getItemLevel()]);
+					//武器等級傷害修正by testt
 				}
 			} else if (itemType2 == 2) { // armor
 				if (getItem().getDmgModifierByArmor() != 0) {

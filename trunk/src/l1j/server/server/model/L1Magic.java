@@ -876,6 +876,8 @@ public class L1Magic {
 				}
 			}
 		}
+		
+		//追加武魂技能判斷by testt
 
 		if ((_calcType == PC_PC) || (_calcType == PC_NPC)) { // オリジナルINTによる魔法ダメージ
 			magicDamage += _pc.getOriginalMagicDamage();
