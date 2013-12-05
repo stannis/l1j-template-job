@@ -1,30 +1,31 @@
 /*
 Navicat MySQL Data Transfer
 
-Source Server         : localhost_3306
-Source Server Version : 50051
+Source Server         : l1j-tw
+Source Server Version : 60011
 Source Host           : localhost:3306
-Source Database       : l1jdb_taiwan
+Source Database       : l1jdb
 
 Target Server Type    : MYSQL
-Target Server Version : 50051
+Target Server Version : 60011
 File Encoding         : 65001
 
-Date: 2012-06-30 19:32:21
+Date: 2013-12-05 15:10:42
 */
 
 SET FOREIGN_KEY_CHECKS=0;
+
 -- ----------------------------
--- Table structure for `npcaction`
+-- Table structure for npcaction
 -- ----------------------------
 DROP TABLE IF EXISTS `npcaction`;
 CREATE TABLE `npcaction` (
-  `npcid` int(10) unsigned NOT NULL default '0',
-  `normal_action` varchar(45) NOT NULL default '',
-  `caotic_action` varchar(45) NOT NULL default '',
-  `teleport_url` varchar(45) NOT NULL default '',
-  `teleport_urla` varchar(45) NOT NULL default '',
-  PRIMARY KEY  (`npcid`)
+  `npcid` int(10) unsigned NOT NULL DEFAULT '0',
+  `normal_action` varchar(45) NOT NULL DEFAULT '',
+  `caotic_action` varchar(45) NOT NULL DEFAULT '',
+  `teleport_url` varchar(45) NOT NULL DEFAULT '',
+  `teleport_urla` varchar(45) NOT NULL DEFAULT '',
+  PRIMARY KEY (`npcid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
@@ -1031,7 +1032,7 @@ INSERT INTO `npcaction` VALUES ('81025', 'pandora', 'pandora', '', '');
 INSERT INTO `npcaction` VALUES ('81026', 'pandora', 'pandora', '', '');
 INSERT INTO `npcaction` VALUES ('81027', 'pandora', 'pandora', '', '');
 INSERT INTO `npcaction` VALUES ('81028', 'pandora', 'pandora', '', '');
-INSERT INTO `npcaction` VALUES ('81029', 'pandora', 'pandora', '', '');
+INSERT INTO `npcaction` VALUES ('81029', 'shopmodel', 'shopmodel', '', '');
 INSERT INTO `npcaction` VALUES ('81105', 'stoenm4', 'stoenm4', '', '');
 INSERT INTO `npcaction` VALUES ('81110', 'pandora', 'pandora', '', '');
 INSERT INTO `npcaction` VALUES ('81112', 'rader1', 'rader1', '', '');
@@ -1142,7 +1143,7 @@ INSERT INTO `npcaction` VALUES ('81373', 'j_paper', '', '', '');
 INSERT INTO `npcaction` VALUES ('81374', 'j_l_out00', '', '', '');
 INSERT INTO `npcaction` VALUES ('81375', 'hugrint1', '', '', '');
 INSERT INTO `npcaction` VALUES ('91002', 'dufo', 'dufo', '', '');
-INSERT INTO `npcaction` VALUES ('150000', 'pandora', 'pandora', '', '');
+INSERT INTO `npcaction` VALUES ('150000', 'limin', 'limin', '', '');
 INSERT INTO `npcaction` VALUES ('150001', 'pandora', 'pandora', '', '');
 INSERT INTO `npcaction` VALUES ('150002', 'pandora', 'pandora', '', '');
 INSERT INTO `npcaction` VALUES ('150003', 'pandora', 'pandora', '', '');
@@ -1152,3 +1153,12 @@ INSERT INTO `npcaction` VALUES ('150006', 'pandora', 'pandora', '', '');
 INSERT INTO `npcaction` VALUES ('150007', 'pandora', 'pandora', '', '');
 INSERT INTO `npcaction` VALUES ('150008', 'pandora', 'pandora', '', '');
 INSERT INTO `npcaction` VALUES ('150009', 'pandora', 'pandora', '', '');
+INSERT INTO `npcaction` VALUES ('151001', 'colos', 'colos', 'colos1', '');
+INSERT INTO `npcaction` VALUES ('151002', 'colos', 'colos', 'colos1', '');
+INSERT INTO `npcaction` VALUES ('151003', 'colos', 'colos', 'colos1', '');
+INSERT INTO `npcaction` VALUES ('151004', 'mellin', 'mellin1', '', '');
+INSERT INTO `npcaction` VALUES ('151101', 'deathmatcher', 'deathmatcher', 'deathmatcher', '');
+INSERT INTO `npcaction` VALUES ('151102', 'marrio', 'marrio', '', '');
+INSERT INTO `npcaction` VALUES ('150010', 'wiwean', 'wiwean', '', '');
+INSERT INTO `npcaction` VALUES ('150011', 'gigi_get', 'gigi_get', '', '');
+INSERT INTO `npcaction` VALUES ('150012', 'shopmodel', 'shopmodel', '', '');

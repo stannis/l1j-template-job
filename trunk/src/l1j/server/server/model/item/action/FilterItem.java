@@ -25,7 +25,7 @@ import l1j.server.server.model.Instance.L1PcInstance;
 import l1j.server.server.serverpackets.S_ServerMessage;
 import l1j.server.server.serverpackets.S_NPCTalkReturn;
 import l1j.server.server.templates.L1Item;
-import l1j.server.server.utils.Random;
+import l1j.server.server.utils.random.Random;
 
 public class FilterItem {
 	
@@ -103,7 +103,9 @@ public class FilterItem {
 				count = 214748;
 				break;
 			default:				
-				if (f_item.getItem().getMaterial() == 9 || DropItemTable.getInstance().checkDropItem(f_item.getItemId())) { 
+				if (f_item.getItem().getMaterial() == 9
+				|| DropItemTable.getInstance().checkDropItem(f_item.getItemId())
+				|| f_item.getStepLevel() != 0) { //骨製品及部分雜物可以煉金，若物品有等級則無法煉金by testt
 					count = 2000;
 					itemid = 40308;
 				}

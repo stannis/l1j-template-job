@@ -134,7 +134,7 @@ public class MySqlCharacterStorage implements CharacterStorage {
 			if (pc.getAccessLevel() == 200) {
 				pc.setGm(true);
 				pc.setMonitor(false);
-			} else if (pc.getAccessLevel() == 100) {
+			} else if (pc.getAccessLevel() >= 1) {//測試指令權限
 				pc.setGm(false);
 				pc.setMonitor(true);
 			} else {

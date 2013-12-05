@@ -305,8 +305,19 @@ public class L1PcInstance extends L1Character {
 	}
 
 	// 回血開始
+	private int _intervalByDoll = 64000;
+	
+	private int getIntervalByDoll (){
+		return _intervalByDoll;
+	}
+	
+	public void setIntervalByDoll(int i) {
+		_intervalByDoll = i;
+	}
+	
 	public void startHpRegenerationByDoll() {
-		final int INTERVAL_BY_DOLL = 64000;
+		//final int INTERVAL_BY_DOLL = 64000;
+		int INTERVAL_BY_DOLL = getIntervalByDoll() * 1000;//回血週期改為自行設定by test
 		boolean isExistHprDoll = false;
 		if (L1MagicDoll.isHpRegeneration(this)) {
 			isExistHprDoll = true;

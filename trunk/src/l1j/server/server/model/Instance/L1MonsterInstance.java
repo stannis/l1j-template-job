@@ -170,8 +170,13 @@ public class L1MonsterInstance extends L1NpcInstance {
 
 		for (L1PcInstance pc : L1World.getInstance().getVisiblePlayer(this)) {
 
+			//if ( pc == lastTarget || (pc.getCurrentHp() <= 0) || pc.isDead() || pc.isGm()
+			//		|| pc.isMonitor() || pc.isGhost()) {
+			//	continue;
+			//}
+			
 			if ( pc == lastTarget || (pc.getCurrentHp() <= 0) || pc.isDead() || pc.isGm()
-					|| pc.isMonitor() || pc.isGhost()) {
+					|| pc.isGhost()) {//將小GM設定成會被主動怪追擊
 				continue;
 			}
 
