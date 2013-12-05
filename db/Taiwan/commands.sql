@@ -1,28 +1,29 @@
 /*
 Navicat MySQL Data Transfer
 
-Source Server         : localhost_3306
-Source Server Version : 50051
+Source Server         : l1j-tw
+Source Server Version : 60011
 Source Host           : localhost:3306
-Source Database       : l1jdb_taiwan
+Source Database       : l1jdb
 
 Target Server Type    : MYSQL
-Target Server Version : 50051
+Target Server Version : 60011
 File Encoding         : 65001
 
-Date: 2012-06-30 19:31:02
+Date: 2013-12-05 15:11:10
 */
 
 SET FOREIGN_KEY_CHECKS=0;
+
 -- ----------------------------
--- Table structure for `commands`
+-- Table structure for commands
 -- ----------------------------
 DROP TABLE IF EXISTS `commands`;
 CREATE TABLE `commands` (
   `name` varchar(255) NOT NULL,
-  `access_level` int(10) NOT NULL default '200',
+  `access_level` int(10) NOT NULL DEFAULT '200',
   `class_name` varchar(255) NOT NULL,
-  PRIMARY KEY  (`name`)
+  PRIMARY KEY (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ----------------------------
@@ -142,3 +143,5 @@ INSERT INTO `commands` VALUES ('findinvis1', '200', 'L1FindInvis');
 INSERT INTO `commands` VALUES ('狂暴', '200', 'L1Crazy');
 INSERT INTO `commands` VALUES ('掉落資料', '200', 'L1ItemDrops');
 INSERT INTO `commands` VALUES ('查資料', '200', 'L1Search');
+INSERT INTO `commands` VALUES ('addsupport', '200', 'L1AddSupport');
+INSERT INTO `commands` VALUES ('dollhpr', '1', 'L1DollHpr');

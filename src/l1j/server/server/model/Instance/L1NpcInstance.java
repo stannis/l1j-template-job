@@ -1134,12 +1134,13 @@ public class L1NpcInstance extends L1Character {
 		}
 		//傲慢71樓以上，等級經驗額外處理 ，並且一般怪物有1%機會異變by testt
 		if (template.getMapId() != 0) {
-			if ((template.getMapId() >= 171 && template.getMapId() <= 200)
+			if ((template.getMapId() >= 131 && template.getMapId() <= 200)
 					|| ((Random.nextInt(100)+1) <= 1)) {
 				//System.out.println((Random.nextInt(100)+1));
 				if (getAtkspeed() > 0 
 						&& template.get_randomlevel() == 0 ) {//會攻擊的怪物及本來非異變的怪物才會異變
 					templvl = (short)template.get_level();//儲存原來的等級
+					//System.out.println(template.get_level());
 					template.set_level(30);
 					template.set_randomlevel(99);
 					template.set_randomhp(9900);
@@ -1149,7 +1150,7 @@ public class L1NpcInstance extends L1Character {
 					template.set_randomlawful(-1500);
 					template.set_damagereduction(Random.nextInt(31));
 					//在傲慢以外的怪物只要異變都變為被動及不幫忙種族
-					if (template.getMapId() < 171 || template.getMapId() > 200) {
+					if (template.getMapId() < 131 || template.getMapId() > 200) {
 						template.set_agro(false);
 						template.set_agrocoi(false);
 						template.set_agrososc(false);
@@ -1159,6 +1160,7 @@ public class L1NpcInstance extends L1Character {
 		}
 		if (template.get_randomlevel() == 0) { // ランダムLv指定なし
 			setLevel(template.get_level());
+			//System.out.println(template.get_level());
 			//新增名稱變襪 by testt
 			setName(template.get_name());
 			setNameId(template.get_nameid());
@@ -1166,15 +1168,15 @@ public class L1NpcInstance extends L1Character {
 			randomlevel = Random.nextInt(template.get_randomlevel()
 					- template.get_level() + 1);
 			diff = template.get_randomlevel() - template.get_level();
-			//傲慢71樓以上及異變的怪物，等級從51開始起跳 by testt
-			if (template.getMapId() >= 171 && template.getMapId() <= 200) {
+			//傲慢31樓以上及異變的怪物，等級從原有的等級開始起跳9級 by testt
+			if (template.getMapId() >= 131 && template.getMapId() <= 200) {
 				randomlevel = Random.nextInt(template.get_randomlevel()
-						- template.get_level() - 20) + 21;
+						- template.get_level() - 58) + ( templvl - template.get_level());
 			} else {
-				//非傲慢71以上怪物異變，等集郵51起跳，最大59級
+				//非傲慢31以上怪物異變，等集郵31起跳，最大59級
 				if (template.get_randomlevel() == 99) {
 					randomlevel = Random.nextInt(template.get_randomlevel()
-							- template.get_level() - 60) + 21;
+							- template.get_level() - 40) + 1;
 				}
 			}
 			rate = randomlevel / diff;
@@ -1305,7 +1307,9 @@ public class L1NpcInstance extends L1Character {
 		setLightSize(template.getLightSize());
 
 		//將更改的數值初始化by testt
-		template.set_level((int)templvl);
+		if (templvl != 0){
+			template.set_level((int)templvl);
+		}
 		template.set_randomlevel(0);
 		template.set_randomhp(0);
 		template.set_randommp(0);

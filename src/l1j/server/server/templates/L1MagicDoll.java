@@ -20,7 +20,7 @@ import l1j.server.server.model.L1Character;
 import l1j.server.server.model.Instance.L1DollInstance;
 import l1j.server.server.model.Instance.L1PcInstance;
 import l1j.server.server.serverpackets.S_SkillSound;
-import l1j.server.server.utils.Random;
+import l1j.server.server.utils.random.Random;
 import l1j.server.server.serverpackets.S_ServerMessage; // 經驗加倍魔法娃娃訊息
 
 public class L1MagicDoll {
@@ -350,6 +350,7 @@ public class L1MagicDoll {
 						DoubleExp = doll.getExpRate();
 						if (_master instanceof L1PcInstance) {
 							L1PcInstance pc = (L1PcInstance) _master;
+							//System.out.println(chance);
 							pc.sendPackets(new S_SkillSound(_master.getId(),4399));
 							origenalExp *= ((double)DoubleExp / 100);// 每次發動成功就乘以經驗倍率 by testt
 						}
@@ -359,9 +360,9 @@ public class L1MagicDoll {
 		}
 		if (_master instanceof L1PcInstance && DoubleExp > 100) {
 			L1PcInstance pc = (L1PcInstance) _master;		
-			pc.sendPackets(new S_ServerMessage(166, "經驗值加成 " + ((double)DoubleExp / 100) + " 倍")); 
+			pc.sendPackets(new S_ServerMessage(166, "經驗值加成 " + ((double)origenalExp / 100) + " 倍")); 
 		}
-		return ((double)DoubleExp / 100);
+		return ((double)origenalExp / 100);
 	}
 	
 	// TODO 加速狀態魔法娃娃

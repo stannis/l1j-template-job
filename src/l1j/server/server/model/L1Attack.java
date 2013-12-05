@@ -714,13 +714,15 @@ public class L1Attack {
 		double defenderValue = 0;
 		if (_weaponType == 0){
 			defenderValue = (double) (_targetNpc.getAc() * 1.5 * (1 + _targetNpc.getShortStepFix())) * -1;
-		} else if (_pc != null && weapon.getEnchantLevel() > 6) {
-			defenderValue = (double) (_targetNpc.getAc() * 1.5 * (1 + _targetNpc.getShortStepFix()
-								- (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D)) * -1;
-			//System.out.println("被攻擊者的近戰防禦骰子修正為" + ((1 + _targetNpc.getShortStepFix()
-			//		- (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D)* -1));
-		}else {
-			defenderValue = (double) (_targetNpc.getAc() * 1.5 * (1 + _targetNpc.getShortStepFix())) * -1;
+		} else {
+			if (_pc != null && weapon.getEnchantLevel() > 6) {
+				defenderValue = (double) (_targetNpc.getAc() * 1.5 * (1 + _targetNpc.getShortStepFix()
+									- (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D)) * -1;
+				//System.out.println("被攻擊者的近戰防禦骰子修正為" + ((1 + _targetNpc.getShortStepFix()
+				//		- (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D)* -1));
+			}else {
+				defenderValue = (double) (_targetNpc.getAc() * 1.5 * (1 + _targetNpc.getShortStepFix())) * -1;
+			}
 		}
 		
 		if (_targetNpc.getAc() >= 0) {
@@ -1191,31 +1193,32 @@ public class L1Attack {
 		//} else 
 		
 		// 加入爆擊元素 by testt
-		// 加入爆擊元素 by testt
-		double cirtical = weapon.getItem().getCriticaChance()
-				+ _pc.getWis() / 3
-				- _targetNpc.getShortStepFix() * 25;
-		int rnd = Random.nextInt(100) + 1;
-		double dmgfix = 1;
-		if (cirtical > 33)
-			cirtical = 33;
-		if (cirtical >= rnd) {	
-			if (weapon.getEnchantLevel() > 6) {
-				dmgfix *= 1.8
-				+ (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D
-				- _targetNpc.getShortStepFix();
-			} else {
-				dmgfix *= 1.8 - _targetNpc.getShortStepFix();
+		if (_weaponType != 0) {
+			double cirtical = weapon.getItem().getCriticaChance()
+					+ _pc.getWis() / 3
+					- _targetNpc.getShortStepFix() * 25;
+			int rnd = Random.nextInt(100) + 1;
+			double dmgfix = 1;
+			if (cirtical > 33)
+				cirtical = 33;
+			if (cirtical >= rnd) {	
+				if (weapon.getEnchantLevel() > 6) {
+					dmgfix *= 1.8
+					+ (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() / 100D
+					- _targetNpc.getShortStepFix();
+				} else {
+					dmgfix *= 1.8 - _targetNpc.getShortStepFix();
+				}
+				//System.out.println("對目前攻擊對象的爆擊傷害倍率:" + dmgfix);
+				//System.out.println("武器增加的傷害倍率：" + (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() + "%");
+				//System.out.println("武器原始的爆擊率：" + weapon.getItem().getCriticaChance() + "%");
+				//System.out.println("武器整體的爆擊率：" + cirtical + "%");
+				if (dmgfix < 1)
+					dmgfix = 1;
+				dmg *= dmgfix;
+				_pc.sendPackets(new S_SkillSound(_targetNpc.getId(), 6526));
+				_pc.broadcastPacket(new S_SkillSound(_targetNpc.getId(), 6526));
 			}
-			//System.out.println("對目前攻擊對象的爆擊傷害倍率:" + dmgfix);
-			//System.out.println("武器增加的傷害倍率：" + (weapon.getEnchantLevel() - 6) * 7 * weapon.getStepLevel() + "%");
-			//System.out.println("武器原始的爆擊率：" + weapon.getItem().getCriticaChance() + "%");
-			//System.out.println("武器整體的爆擊率：" + cirtical + "%");
-			if (dmgfix < 1)
-				dmgfix = 1;
-			dmg *= dmgfix;
-			_pc.sendPackets(new S_SkillSound(_targetNpc.getId(), 2546));
-			_pc.broadcastPacket(new S_SkillSound(_targetNpc.getId(), 2546));
 		}
 		
 		if ((_weaponId == 2) || (_weaponId == 200002)) { // ダイスダガー

@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import l1j.server.server.model.Instance.L1PcInstance;
 import l1j.server.server.serverpackets.S_SkillSound; //TODO HPR効果
+import l1j.server.server.serverpackets.S_SystemMessage;
 import l1j.server.server.templates.L1MagicDoll;
 
 public class HpRegenerationByDoll extends TimerTask {
@@ -48,9 +49,22 @@ public class HpRegenerationByDoll extends TimerTask {
 		int newHp = _pc.getCurrentHp() + L1MagicDoll.getHpByDoll(_pc);
 		if (newHp < 0) {
 			newHp = 0;
+			return;
 		}
-		_pc.sendPackets(new S_SkillSound(_pc.getId(), 744));
-		_pc.broadcastPacket(new S_SkillSound(_pc.getId(), 744));
-		_pc.setCurrentHp(newHp);
+		//_pc.sendPackets(new S_SkillSound(_pc.getId(), 744));
+		//_pc.broadcastPacket(new S_SkillSound(_pc.getId(), 744));
+		//_pc.setCurrentHp(newHp);
+		
+		// 增加扣金幣判斷 by testt
+		if (_pc.getInventory().checkItem(40308, L1MagicDoll.getHpByDoll(_pc) * 20)) {
+			_pc.getInventory().consumeItem(40308, L1MagicDoll.getHpByDoll(_pc) * 20);
+			_pc.sendPackets(new S_SkillSound(_pc.getId(), 744));
+			_pc.broadcastPacket(new S_SkillSound(_pc.getId(), 744));
+			_pc.setCurrentHp(newHp);
+		} else {
+			_pc.sendPackets(new S_SystemMessage("金幣不足，停止娃娃回血功能"));
+			_pc.stopHpRegenerationByDoll();
+		}
+		// END
 	}
 }
